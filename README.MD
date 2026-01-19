@@ -228,4 +228,239 @@ When using our code/setup in an academic work please cite our publication using 
 }
 ```
 
+# Learning to Fly in Seconds 中文操作文档
+
+## 1. 项目简介
+
+Learning to Fly in Seconds 是一个基于深度强化学习的四旋翼无人机仿真与训练框架。
+
+核心特点：
+- 已被上游集成到 RLtools 中，支持快速训练。
+- 提供基于 Web 的可视化仿真界面与无头（headless）高效训练模式。
+- 支持将训练好的 policy 部署到真实的 Crazyflie 纳米无人机上。
+
+主要功能：
+- Web 可视化仿真环境
+- 无头模式（Headless）用于高效训练与日志记录
+- 将训练策略编译进飞控固件并刷写到 Crazyflie
+
+---
+
+## 2. 依赖环境
+
+- 核心库：RLtools
+- 推荐操作系统：Ubuntu（已在 20.04 / 24.04 测试）、macOS（已在 Sonoma 测试）
+- 可选：Docker
+
+---
+
+## 3. 操作流程：安装与运行
+
+项目提供两种主要运行方式：Docker 容器（推荐快速体验）和本地安装（推荐获取最佳性能）。
+
+### 方式一：Docker 环境（隔离且便捷）
+
+此方式无需配置复杂的本地环境，直接使用预构建镜像。
+
+1. 启动仿真与训练 UI
+
+```
+docker run -it --rm -p 8000:8000 arpllab/learning_to_fly
+```
+
+启动后，在浏览器访问： https://0.0.0.0:8000 ，即可看到仿真界面并开始训练。
+
+2. 自行构建镜像（可选）
+
+如果需要修改代码或重新构建镜像：
+
+```
+# 构建主镜像
+docker build -t arpllab/learning_to_fly .
+
+# 构建固件编译专用镜像（用于部署到实体机）
+docker build -t arpllab/learning_to_fly_build_firmware -f Dockerfile_build_firmware .
+```
+
+3. 其它运行模式
+
+- 无头训练模式（带日志）：不启动 UI，记录 TensorBoard 日志。
+
+```
+docker run -it --rm -p 6006:6006 arpllab/learning_to_fly training_headless
+# 在浏览器访问 http://0.0.0.0:6006 查看训练数据
+```
+
+- 基准测试模式（最快速度）：无 UI、无日志、无 Checkpoint，仅测试训练速度。
+
+```
+docker run -it --rm arpllab/learning_to_fly training_benchmark
+```
+
+---
+
+### 方式二：本地安装
+
+为了获得最佳性能，建议在物理机直接编译。
+
+1. 获取代码
+
+```
+git clone https://github.com/Lyco123/learning-to-fly learning_to_fly
+cd learning_to_fly
+```
+
+2. 初始化子模块
+
+```
+# 初始化核心库 RLtools
+git submodule update --init -- external/rl_tools
+cd external/rl_tools
+
+# 初始化 RLtools 的依赖（用于测试、日志等）
+git submodule update --init -- external/cli11 external/highfive external/json/ external/tensorboard tests/lib/googletest/
+```
+
+3. 安装系统依赖
+
+Ubuntu 示例：
+
+```
+sudo apt update && sudo apt install libhdf5-dev libopenblas-dev protobuf-compiler libprotobuf-dev libboost-all-dev
+# 提示：安装 Intel MKL 可替代 OpenBLAS 以获得更高性能
+```
+
+macOS 示例：
+
+```
+brew install hdf5 protobuf boost
+# 确保 brew link protobuf 正常执行
+```
+
+4. 编译代码
+
+回到项目根目录并构建：
+
+```
+cd ../../  # 回到 learning_to_fly 根目录
+mkdir build && cd build
+
+# 配置 CMake (根据系统选择一条)
+# Ubuntu + OpenBLAS:
+cmake .. -DCMAKE_BUILD_TYPE=Release -DRL_TOOLS_BACKEND_ENABLE_OPENBLAS:BOOL=ON
+
+# Ubuntu + MKL:
+MKL_ROOT=/opt/intel/oneapi/mkl/latest cmake .. -DCMAKE_BUILD_TYPE=Release -DRL_TOOLS_BACKEND_ENABLE_MKL:BOOL=ON
+
+# macOS:
+cmake .. -DCMAKE_BUILD_TYPE=Release
+
+# 开始编译
+cmake --build . -j8
+```
+
+5. 运行程序
+
+- 无头训练模式：
+
+```
+cd .. # 回到根目录
+./build/src/training_headless
+```
+
+查看日志（需先安装 TensorBoard）：
+
+```
+pip install tensorboard
+tensorboard --logdir=logs
+```
+
+- UI 界面模式：
+
+```
+# 先下载前端依赖
+cd src/ui
+./get_dependencies.sh
+cd ../../
+
+# 启动 UI
+./build/src/ui 0.0.0.0 8000
+# 浏览器访问 http://0.0.0.0:8000
+```
+
+- 基准测试（以最高优先级运行）：
+
+```
+sudo nice -n -20 ./build/src/training_benchmark
+```
+
+---
+
+## 4. 部署至实体无人机（Crazyflie）
+
+将训练好的策略应用到真实 Crazyflie 无人机上，流程包括导出 checkpoint、编译固件、烧录与测试。
+
+1. 训练并导出 Checkpoint
+
+使用 Docker 训练并将 Checkpoint 挂载到本地：
+
+```
+docker run -it --rm -p 8000:8000 -v $(pwd)/checkpoints:/learning_to_fly/checkpoints arpllab/learning_to_fly
+```
+
+训练完成后，在本地 `checkpoints/` 目录下找到生成的头文件（例如 `actor_000000000300000.h`）。
+
+2. 编译固件
+
+利用专门的构建镜像，将训练好的策略编译进飞控固件：
+
+```
+docker run -it --rm \
+    -v $(pwd)/checkpoints/YOUR_PATH/actor.h:/controller/data/actor.h:ro \
+    -v $(pwd)/build_firmware:/output \
+    arpllab/learning_to_fly_build_firmware
+```
+
+将 `YOUR_PATH` 替换为实际路径。编译结果会生成在 `build_firmware/cf2.bin`。
+
+3. 烧录固件
+
+使用 cfloader 将固件刷入 Crazyflie：
+
+```
+cfloader flash build_firmware/cf2.bin stm32-fw -w radio://0/80/2M
+```
+
+4. 飞行控制（常用方式）
+
+⚠️ 注意：运行学习到的控制器存在风险，请务必在安全环境下测试！
+
+- 使用手柄控制：
+  - 使用 cfclient 连接无人机。
+  - 确保起飞并悬停稳定。
+  - 找到一个起飞并悬停良好的策略，修改参数 `rlt.wn` 为 `4` ，进入“8字形跟踪模式”。
+
+- 使用脚本控制（推荐）：
+  - 使用 `scripts/trigger.py` 进行更精细的模式控制。
+
+示例：
+
+```
+# 起飞并切换（推荐首选）
+python3 scripts/trigger.py --mode takeoff_and_switch
+
+# 直接使用策略起飞
+python3 scripts/trigger.py --mode hover_learned
+
+# 轨迹跟踪（缩放轨迹）
+python3 scripts/trigger.py --mode trajectory_tracking --trajectory-scale 0.3
+```
+
+---
+
+
+
+
+
+
 
