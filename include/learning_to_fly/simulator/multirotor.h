@@ -1,8 +1,9 @@
+//多旋翼无人机仿真环境的所有参数结构
 #ifndef LEARNING_TO_FLY_IN_SECONDS_SIMULATOR_MULTIROTOR_H
 #define LEARNING_TO_FLY_IN_SECONDS_SIMULATOR_MULTIROTOR_H
 
 #include <rl_tools/utils/generic/typing.h>
-
+// N: 旋翼数量
 namespace rl_tools::rl::environments::multirotor{
     template <typename T, typename TI, TI N, typename T_REWARD_FUNCTION>
     struct ParametersBase{
@@ -11,45 +12,49 @@ namespace rl_tools::rl::environments::multirotor{
                 T min;
                 T max;
             };
-            T rotor_positions[N][3];
-            T rotor_thrust_directions[N][3];
-            T rotor_torque_directions[N][3];
-            T thrust_constants[3];
-            T torque_constant;
-            T mass;
-            T gravity[3];
-            T J[3][3];
-            T J_inv[3][3];
-            T rpm_time_constant;
-            ActionLimit action_limit;
+            T rotor_positions[N][3];// 每个旋翼的位置坐标 [x, y, z]
+            T rotor_thrust_directions[N][3];// 每个旋翼的推力方向向量
+            T rotor_torque_directions[N][3]; // 每个旋翼的反扭矩方向向量
+            T thrust_constants[3];// 推力系数
+            T torque_constant;// 扭矩系数
+            T mass;// 无人机总质量
+            T gravity[3];// 重力加速度向量
+            T J[3][3];// 3x3矩阵描述旋转惯性
+            T J_inv[3][3];//旋转惯性逆矩阵
+            T rpm_time_constant; // 电机响应时间常数
+            ActionLimit action_limit;// 动作限制
         };
         struct Integration{
             T dt;
         };
         struct MDP{
             using REWARD_FUNCTION = T_REWARD_FUNCTION;
+            // 初始条件
             struct Initialization{
-                T guidance;
-                T max_position;
-                T max_angle;
-                T max_linear_velocity;
-                T max_angular_velocity;
+                T guidance; // 引导参数
+                T max_position;// 最大初始位置偏差
+                T max_angle;// 最大初始倾斜角度
+                T max_linear_velocity;// 最大初始线速度
+                T max_angular_velocity;/ 最大初始角速度
                 bool relative_rpm; //(specification from -1 to 1)
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
             };
+            // 终止条件
             struct Termination{
                 bool enabled = false;
                 T position_threshold;
                 T linear_velocity_threshold;
                 T angular_velocity_threshold;
             };
+            // 观测噪声
             struct ObservationNoise{
                 T position;
                 T orientation;
                 T linear_velocity;
                 T angular_velocity;
             };
+            // 动作噪声
             struct ActionNoise{
                 T normalized_rpm; // std of additive gaussian noise onto the normalized action (-1, 1)
             };
@@ -63,6 +68,7 @@ namespace rl_tools::rl::environments::multirotor{
         Integration integration;
         MDP mdp;
     };
+     // 添加环境干扰
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDisturbances: T_NEXT_COMPONENT{
         struct Disturbances{
@@ -75,7 +81,7 @@ namespace rl_tools::rl::environments::multirotor{
         };
         Disturbances disturbances;
     };
-
+    // 添加自身干扰
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDomainRandomization: T_NEXT_COMPONENT{
         struct DomainRandomization{
@@ -113,7 +119,7 @@ namespace rl_tools::rl::environments::multirotor{
         struct NONE{
             static constexpr T_TI DIM = 0;
         };
-
+        // 各种组件的具体实现
         template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
         struct PositionSpecification{
             using T = T_T;
@@ -262,7 +268,7 @@ namespace rl_tools::rl::environments::multirotor{
         };
     }
 
-
+    // 基础状态 (位置 + 姿态 + 线速度 + 角速度)
     template <typename T_T, typename T_TI>
     struct StateBase{
         using T = T_T;
@@ -274,6 +280,7 @@ namespace rl_tools::rl::environments::multirotor{
         T linear_velocity[3];
         T angular_velocity[3];
     };
+    //旋翼状态
     template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT>
     struct StateRotors: T_NEXT_COMPONENT{
         using T = T_T;
@@ -284,6 +291,7 @@ namespace rl_tools::rl::environments::multirotor{
         static constexpr TI DIM = PARENT_DIM + 4;
         T rpm[4];
     };
+    //动作延迟历史
     template <typename T_T, typename T_TI, T_TI T_HISTORY_LENGTH, typename T_NEXT_COMPONENT>
     struct StateRotorsHistory: StateRotors<T_T, T_TI, T_NEXT_COMPONENT>{
         using T = T_T;
@@ -296,6 +304,7 @@ namespace rl_tools::rl::environments::multirotor{
         static constexpr TI DIM = PARENT_DIM + HISTORY_LENGTH * ACTION_DIM;
         T action_history[HISTORY_LENGTH][4];
     };
+    //随机外力
     template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT>
     struct StateRandomForce: T_NEXT_COMPONENT{
         using T = T_T;
