@@ -4,6 +4,3 @@
 [submodule "external/rl_tools"]
 	path = external/rl_tools
 	url = https://gitee.com/LJN2017117574/rl-tools.git
-[submodule "controller"]
-	path = controller
-	url = https://gitee.com/LJN2017117574/learning_to_fly_controller.git
