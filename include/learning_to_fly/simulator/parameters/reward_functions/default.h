@@ -3,7 +3,7 @@
 #include "sq_exp.h"
 #include "squared.h"
 #include "absolute.h"
-#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE (0.334)
+#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE (0.3215)
 namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
     template<typename T>
     constexpr AbsExp<T> reward_263 = {
