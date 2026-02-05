@@ -23,11 +23,15 @@ namespace rl_tools::rl::environments::multirotor{
             T rpm_time_constant;
             ActionLimit action_limit;
         };
+
         struct Integration{
             T dt;
         };
+
         struct MDP{
+            
             using REWARD_FUNCTION = T_REWARD_FUNCTION;
+
             struct Initialization{
                 T guidance;
                 T max_position;
@@ -38,21 +42,28 @@ namespace rl_tools::rl::environments::multirotor{
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
             };
+
+            /* termination */
             struct Termination{
                 bool enabled = false;
                 T position_threshold;
                 T linear_velocity_threshold;
                 T angular_velocity_threshold;
             };
+
+            /* observation noise */
             struct ObservationNoise{
                 T position;
                 T orientation;
                 T linear_velocity;
                 T angular_velocity;
             };
+
+            /* action noise */
             struct ActionNoise{
                 T normalized_rpm; // std of additive gaussian noise onto the normalized action (-1, 1)
             };
+
             Initialization init;
             REWARD_FUNCTION reward;
             ObservationNoise observation_noise;
@@ -63,6 +74,8 @@ namespace rl_tools::rl::environments::multirotor{
         Integration integration;
         MDP mdp;
     };
+
+    /* disturbances */
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDisturbances: T_NEXT_COMPONENT{
         struct Disturbances{
@@ -76,6 +89,7 @@ namespace rl_tools::rl::environments::multirotor{
         Disturbances disturbances;
     };
 
+    /* domain randomization */
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDomainRandomization: T_NEXT_COMPONENT{
         struct DomainRandomization{
