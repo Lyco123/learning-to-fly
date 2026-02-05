@@ -22,7 +22,7 @@ namespace learning_to_fly::config{
         static constexpr bool ENABLE_CURRICULUM = true;
         static constexpr bool RECALCULATE_REWARDS = true;
         static constexpr bool USE_INITIAL_REWARD_FUNCTION = false; // Use target reward function as metric
-        static constexpr bool INIT_NORMAL = true;
+        static constexpr bool INIT_NORMAL = false;
         static constexpr bool EXPLORATION_NOISE_DECAY = true;
     };
 }
