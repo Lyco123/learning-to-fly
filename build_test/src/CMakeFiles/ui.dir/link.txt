@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/ui.dir/link.d CMakeFiles/ui.dir/ui/ui.cpp.o -o ui

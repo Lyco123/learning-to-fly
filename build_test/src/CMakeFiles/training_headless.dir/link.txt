@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/training_headless.dir/link.d CMakeFiles/training_headless.dir/training.cpp.o -o training_headless

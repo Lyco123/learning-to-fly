@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/training_benchmark.dir/link.d CMakeFiles/training_benchmark.dir/training.cpp.o -o training_benchmark

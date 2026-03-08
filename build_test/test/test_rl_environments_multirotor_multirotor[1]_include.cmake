@@ -1,0 +1,5 @@
+if(EXISTS "/home/runner/work/learning-to-fly/learning-to-fly/build_test/test/test_rl_environments_multirotor_multirotor[1]_tests.cmake")
+  include("/home/runner/work/learning-to-fly/learning-to-fly/build_test/test/test_rl_environments_multirotor_multirotor[1]_tests.cmake")
+else()
+  add_test(test_rl_environments_multirotor_multirotor_NOT_BUILT test_rl_environments_multirotor_multirotor_NOT_BUILT)
+endif()
