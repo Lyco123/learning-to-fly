@@ -61,8 +61,13 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             T tilt_rate_cost = get(action, 0, 0) * get(action, 0, 0)
                              + get(action, 0, 1) * get(action, 0, 1);
             T yaw_rate_cost  = get(action, 0, 2) * get(action, 0, 2);
-            // Penalize thrust deviation from hover: hover normalizes to
-            // (g / max_thrust_acc) * 2 - 1; use simple L2 from 0 (midpoint)
+            // Penalize the squared normalized thrust command.
+            // The normalized thrust action is in [-1, 1] where -1 = 0 m/s^2
+            // and +1 = max_thrust_acc m/s^2.
+            // Hover thrust normalizes to (g / max_thrust_acc) * 2 - 1 ≈ -0.11
+            // (not 0), so this penalty does NOT center at hover.  The intent is
+            // to discourage large absolute thrust commands; a mission-specific
+            // hover-centering penalty can be added separately if desired.
             T thrust_dev     = get(action, 0, 3);
             T linear_acc_cost_cmd = thrust_dev * thrust_dev;
             components.action_cost = params.weight_tilt_vel   * tilt_rate_cost

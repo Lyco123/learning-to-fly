@@ -737,7 +737,15 @@ namespace rl_tools{
             omega_cmd[0] = get(action, 0, 0) * env.parameters.ctbr.max_body_rate_xy;
             omega_cmd[1] = get(action, 0, 1) * env.parameters.ctbr.max_body_rate_xy;
             omega_cmd[2] = get(action, 0, 2) * env.parameters.ctbr.max_body_rate_z;
-            // thrust_acc in [0, max_thrust_acc]: map [-1,1] -> [0, max]
+            // Thrust: normalized action [-1, 1] maps to [0, max_thrust_acc].
+            //   action=-1 →  0 m/s^2 (no thrust)
+            //   action= 0 →  max_thrust_acc / 2
+            //   action=+1 →  max_thrust_acc
+            // Physical hover is at g ≈ 9.81 m/s², which normalizes to
+            //   (g / max_thrust_acc) * 2 - 1 ≈ -0.11 for max_thrust_acc=22 m/s².
+            // The policy must learn to output slightly negative values for steady
+            // hover.  This is intentional: the full [-1,+1] range is available
+            // for the policy, allowing both sub-hover and full-throttle commands.
             T thrust_acc = ((T)1 + get(action, 0, 3)) * (T)0.5 * env.parameters.ctbr.max_thrust_acc;
 
             // P-rate controller: desired rate error -> torque command
