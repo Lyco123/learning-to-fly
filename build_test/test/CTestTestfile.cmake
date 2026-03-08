@@ -5,4 +5,5 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 include("/home/runner/work/learning-to-fly/learning-to-fly/build_test/test/test_rl_environments_multirotor_multirotor[1]_include.cmake")
+include("/home/runner/work/learning-to-fly/learning-to-fly/build_test/test/test_ctbr[1]_include.cmake")
 subdirs("lib/googletest")

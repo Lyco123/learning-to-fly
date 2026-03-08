@@ -1,3 +1,5 @@
+#ifndef LEARNING_TO_FLY_IN_SECONDS_SIMULATOR_PARAMETERS_TERMINATION_DEFAULT_H
+#define LEARNING_TO_FLY_IN_SECONDS_SIMULATOR_PARAMETERS_TERMINATION_DEFAULT_H
 
 #include "../../multirotor.h"
 
@@ -19,3 +21,4 @@ namespace rl_tools::rl::environments::multirotor::parameters::termination{
         1000 // angular velocity
     };
 }
+#endif

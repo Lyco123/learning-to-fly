@@ -315,6 +315,19 @@ test_rl_environments_multirotor_multirotor/fast:
 .PHONY : test_rl_environments_multirotor_multirotor/fast
 
 #=============================================================================
+# Target rules for targets named test_ctbr
+
+# Build rule for target.
+test_ctbr: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_ctbr
+.PHONY : test_ctbr
+
+# fast build rule for target.
+test_ctbr/fast:
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/build
+.PHONY : test_ctbr/fast
+
+#=============================================================================
 # Target rules for targets named gtest
 
 # Build rule for target.
@@ -362,6 +375,7 @@ help:
 	@echo "... rl_environments_pendulum_td3_training_bare"
 	@echo "... rl_environments_pendulum_td3_training_standalone"
 	@echo "... rl_environments_pendulum_td3_wasm_training_test"
+	@echo "... test_ctbr"
 	@echo "... test_rl_environments_multirotor_multirotor"
 	@echo "... training_benchmark"
 	@echo "... training_headless"

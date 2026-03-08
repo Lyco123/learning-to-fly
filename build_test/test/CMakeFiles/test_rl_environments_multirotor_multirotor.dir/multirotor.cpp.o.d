@@ -254,6 +254,8 @@ test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/multirotor.cpp.o:
  /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/operations_cpu.h \
  /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/operations_generic.h \
  /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/multirotor.h \
+ /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/rate_controller.h \
+ /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/mixer.h \
  /home/runner/work/learning-to-fly/learning-to-fly/include/learning_to_fly/simulator/quaternion_helper.h \
  /home/runner/work/learning-to-fly/learning-to-fly/external/rl_tools/include/rl_tools/rl/environments/operations_generic.h \
  /home/runner/work/learning-to-fly/learning-to-fly/external/rl_tools/include/rl_tools/rl/environments/../../version.h \

@@ -89,6 +89,21 @@ namespace rl_tools::rl::environments::multirotor{
         DomainRandomization domain_randomization;
     };
 
+    // CTBR controller parameters wrapper.
+    // Stacks on top of ParametersBase (or ParametersDisturbances) and adds
+    // fields required by the rate-controller + mixer path in operations_generic.h.
+    template <typename T, typename TI, typename T_NEXT_COMPONENT>
+    struct ParametersCTBR: T_NEXT_COMPONENT{
+        struct CTBR{
+            T kp_xy;             // rate-controller P-gain roll/pitch [N·m/(rad/s)]
+            T kp_z;              // rate-controller P-gain yaw        [N·m/(rad/s)]
+            T max_body_rate_xy;  // max commanded roll/pitch rate [rad/s]
+            T max_body_rate_z;   // max commanded yaw rate        [rad/s]
+            T max_thrust_acc;    // max collective thrust acceleration [m/s^2]
+        };
+        CTBR ctbr;
+    };
+
 
 //    enum class LatentStateType{
 //        Empty,
@@ -260,6 +275,26 @@ namespace rl_tools::rl::environments::multirotor{
             static constexpr TI CURRENT_DIM = 6;
             static constexpr TI DIM = NEXT_COMPONENT::DIM + CURRENT_DIM;
         };
+        // CTBR command observation: reads the most-recent normalized action
+        // [omega_x_cmd, omega_y_cmd, omega_z_cmd, thrust_acc_cmd] (all in [-1,1])
+        // from state.action_history[HISTORY_LENGTH-1].
+        // Requires STATE_TYPE to be StateRotorsHistory with HISTORY_LENGTH >= 1.
+        template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
+        struct CTBRCommandSpecification {
+            using T = T_T;
+            using TI = T_TI;
+            using NEXT_COMPONENT = T_NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = true;
+        };
+        template <typename SPEC>
+        struct CTBRCommand {
+            using T = typename SPEC::T;
+            using TI = typename SPEC::TI;
+            using NEXT_COMPONENT = typename SPEC::NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = SPEC::PRIVILEGED;
+            static constexpr TI CURRENT_DIM = 4; // [omega_x, omega_y, omega_z, thrust] normalized
+            static constexpr TI DIM = NEXT_COMPONENT::DIM + CURRENT_DIM;
+        };
     }
 
 
@@ -314,6 +349,8 @@ namespace rl_tools::rl::environments::multirotor{
 //        static constexpr LatentStateType LATENT_STATE_TYPE = LatentStateType::Empty;
 //        static constexpr StateType STATE_TYPE = StateType::Base;
 //        static constexpr ObservationType OBSERVATION_TYPE = ObservationType::Normal;
+        static constexpr TI ACTION_HISTORY_LENGTH = 0;
+        static constexpr bool CTBR = false; // legacy direct-motor control
         using STATE_TYPE = StateBase<T, TI>;
         using OBSERVATION_TYPE = observation::Position<observation::PositionSpecification<T, TI,
                                  observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecification<T, TI,

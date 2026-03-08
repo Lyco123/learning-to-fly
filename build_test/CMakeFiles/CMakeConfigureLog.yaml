@@ -704,3 +704,40 @@ events:
         
       exitCode: 2
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/FindHDF5.cmake:241 (try_compile)"
+      - "/usr/local/share/cmake-3.31/Modules/FindHDF5.cmake:611 (_HDF5_test_regular_compiler_C)"
+      - "CMakeLists.txt:9 (find_package)"
+    directories:
+      source: "/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/CMakeScratch/TryCompile-G60boP"
+      binary: "/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/CMakeScratch/TryCompile-G60boP"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HDF5_C_COMPILER_NO_INTERROGATE"
+      cached: true
+      stdout: |
+        Change Dir: '/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/CMakeScratch/TryCompile-G60boP'
+        
+        Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5d084/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_5d084.dir/build.make CMakeFiles/cmTC_5d084.dir/build
+        gmake[1]: Entering directory '/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/CMakeScratch/TryCompile-G60boP'
+        Building C object CMakeFiles/cmTC_5d084.dir/cmake_hdf5_test.c.o
+        /usr/bin/cc    -o CMakeFiles/cmTC_5d084.dir/cmake_hdf5_test.c.o -c /home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/hdf5/cmake_hdf5_test.c
+        /home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/hdf5/cmake_hdf5_test.c:1:10: fatal error: hdf5.h: No such file or directory
+            1 | #include <hdf5.h>
+              |          ^~~~~~~~
+        compilation terminated.
+        gmake[1]: *** [CMakeFiles/cmTC_5d084.dir/build.make:81: CMakeFiles/cmTC_5d084.dir/cmake_hdf5_test.c.o] Error 1
+        gmake[1]: Leaving directory '/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles/CMakeScratch/TryCompile-G60boP'
+        gmake: *** [Makefile:134: cmTC_5d084/fast] Error 2
+        
+      exitCode: 2
+...

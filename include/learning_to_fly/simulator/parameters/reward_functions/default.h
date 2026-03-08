@@ -326,8 +326,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         0.01, // angular_velocity
         0.01, // linear_acceleration
         0.01, // angular_acceleration
-        RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+        RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
         0, // action
+        0, 0, 0, // CTBR weights (tilt_vel, yaw_vel, linear_acc) – unused for legacy
     };
 
     template<typename T>
@@ -344,6 +345,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0.001, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             20, // action
+            0, 0, 0, // CTBR weights
     };
 
     template<typename T>
@@ -360,6 +362,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_4 = {
@@ -375,6 +378,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_5 = {
@@ -390,6 +394,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             1, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_position_only = {
@@ -403,8 +408,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_velocity
             0, // linear_acceleration
             0, // angular_acceleration
-            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0.01, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_position_only_torque = {
@@ -418,8 +424,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_velocity
             0, // linear_acceleration
             0, // angular_acceleration
-            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0.01, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_position_only_torque_curriculum_target = {
@@ -433,8 +440,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_velocity
             0, // linear_acceleration
             0, // angular_acceleration
-            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             1.00, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_fast_learning = {
@@ -448,8 +456,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_velocity
             0, // linear_acceleration
             0, // angular_acceleration
-            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0.0, // action
+            0, 0, 0, // CTBR weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_fast_learning_negative = {
@@ -463,8 +472,55 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_velocity
             0, // linear_acceleration
             0, // angular_acceleration
-            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // action baseline
             0.0, // action
+            0, 0, 0, // CTBR weights
+    };
+
+    // -----------------------------------------------------------------------
+    // CTBR-specific reward function instances
+    // Used when SPEC::STATIC_PARAMETERS::CTBR == true.
+    // The action_cost is computed from weight_tilt_vel / weight_yaw_vel /
+    // weight_linear_acc; the legacy `action` and `action_baseline` fields are
+    // not used in the CTBR path.
+    // -----------------------------------------------------------------------
+    template<typename T>
+    constexpr Squared<T> reward_ctbr_hover = {
+            false, // non_negative
+            0.5,   // scale
+            2,     // constant
+            0,     // termination_penalty
+            5,     // position
+            5,     // orientation
+            0.01,  // linear_velocity
+            0,     // angular_velocity
+            0,     // linear_acceleration
+            0,     // angular_acceleration
+            0,     // action_baseline (unused for CTBR)
+            0,     // action (unused for CTBR)
+            // CTBR weights:
+            0.1,   // weight_tilt_vel   – penalize large roll/pitch rate commands
+            0.05,  // weight_yaw_vel    – penalize large yaw rate commands
+            0.05,  // weight_linear_acc – penalize thrust deviation from 0 (mid-range)
+    };
+    template<typename T>
+    constexpr Squared<T> reward_ctbr_curriculum_target = {
+            false, // non_negative
+            0.5,   // scale
+            2,     // constant
+            0,     // termination_penalty
+            40,    // position
+            5,     // orientation
+            1.0,   // linear_velocity
+            0,     // angular_velocity
+            0,     // linear_acceleration
+            0,     // angular_acceleration
+            0,     // action_baseline (unused for CTBR)
+            0,     // action (unused for CTBR)
+            // CTBR weights:
+            0.5,   // weight_tilt_vel
+            0.2,   // weight_yaw_vel
+            0.2,   // weight_linear_acc
     };
     template<typename T>
     constexpr Absolute<T> reward_absolute_fast_learning = {

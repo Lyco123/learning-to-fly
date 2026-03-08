@@ -20,6 +20,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         T angular_acceleration;
         T action_baseline;
         T action;
+        // CTBR-specific action cost weights (used when SPEC::STATIC_PARAMETERS::CTBR)
+        T weight_tilt_vel;   // cost weight for roll/pitch rate commands
+        T weight_yaw_vel;    // cost weight for yaw rate command
+        T weight_linear_acc; // cost weight for thrust acceleration deviation from hover
         struct Components{
             T orientation_cost;
             T position_cost;
@@ -49,13 +53,31 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         utils::vector_operations::sub<DEVICE, T, 3>(next_state.angular_velocity, state.angular_velocity, angular_acc);
         components.angular_acc_cost = (angular_acc[0] * angular_acc[0] + angular_acc[1] * angular_acc[1] + angular_acc[2] * angular_acc[2]) / (env.parameters.integration.dt * env.parameters.integration.dt);
 
-        T action_diff[ACTION_DIM];
-        for(TI i = 0; i < ACTION_DIM; i++){
-            action_diff[i] = get(action, 0, i) - params.action_baseline;
+        if constexpr(SPEC::STATIC_PARAMETERS::CTBR) {
+            // CTBR action cost: separate weights for tilt rate, yaw rate, thrust acc
+            // action[0..1]: normalized roll/pitch rate commands  [-1, 1]
+            // action[2]:    normalized yaw rate command          [-1, 1]
+            // action[3]:    normalized thrust acc command        [-1, 1]
+            T tilt_rate_cost = get(action, 0, 0) * get(action, 0, 0)
+                             + get(action, 0, 1) * get(action, 0, 1);
+            T yaw_rate_cost  = get(action, 0, 2) * get(action, 0, 2);
+            // Penalize thrust deviation from hover: hover normalizes to
+            // (g / max_thrust_acc) * 2 - 1; use simple L2 from 0 (midpoint)
+            T thrust_dev     = get(action, 0, 3);
+            T linear_acc_cost_cmd = thrust_dev * thrust_dev;
+            components.action_cost = params.weight_tilt_vel   * tilt_rate_cost
+                                   + params.weight_yaw_vel    * yaw_rate_cost
+                                   + params.weight_linear_acc * linear_acc_cost_cmd;
+        } else {
+            T action_diff[ACTION_DIM];
+            for(TI i = 0; i < ACTION_DIM; i++){
+                action_diff[i] = get(action, 0, i) - params.action_baseline;
+            }
+            components.action_cost = utils::vector_operations::norm<DEVICE, T, ACTION_DIM>(action_diff);
+            components.action_cost *= components.action_cost;
+            components.action_cost *= params.action;
         }
-        components.action_cost = utils::vector_operations::norm<DEVICE, T, ACTION_DIM>(action_diff);
-        components.action_cost *= components.action_cost;
-        components.weighted_cost = params.position * components.position_cost + params.orientation * components.orientation_cost + params.linear_velocity * components.linear_vel_cost + params.angular_velocity * components.angular_vel_cost + params.linear_acceleration * components.linear_acc_cost + params.angular_acceleration * components.angular_acc_cost + params.action * components.action_cost;
+        components.weighted_cost = params.position * components.position_cost + params.orientation * components.orientation_cost + params.linear_velocity * components.linear_vel_cost + params.angular_velocity * components.angular_vel_cost + params.linear_acceleration * components.linear_acc_cost + params.angular_acceleration * components.angular_acc_cost + components.action_cost;
         bool terminated_flag = terminated(device, env, next_state, rng);
         components.scaled_weighted_cost = params.scale * components.weighted_cost;
 
@@ -88,7 +110,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         add_scalar(device, device.logger, "reward_weighted/angular_vel_cost", params.angular_velocity     * components.angular_vel_cost, cadence);
         add_scalar(device, device.logger, "reward_weighted/linear_acc_cost" , params.linear_acceleration  * components.linear_acc_cost,  cadence);
         add_scalar(device, device.logger, "reward_weighted/angular_acc_cost", params.angular_acceleration * components.angular_acc_cost, cadence);
-        add_scalar(device, device.logger, "reward_weighted/action_cost",      params.action               * components.action_cost,      cadence);
+        add_scalar(device, device.logger, "reward_weighted/action_cost",      components.action_cost, cadence);
         // log share of the weighted abs cost
         add_scalar(device, device.logger, "reward_share/orientation", params.orientation          * components.orientation_cost / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/position",    params.position             * components.position_cost    / components.weighted_cost, cadence);
@@ -96,7 +118,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         add_scalar(device, device.logger, "reward_share/angular_vel", params.angular_velocity     * components.angular_vel_cost / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/linear_acc",  params.linear_acceleration  * components.linear_acc_cost  / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/angular_acc", params.angular_acceleration * components.angular_acc_cost / components.weighted_cost, cadence);
-        add_scalar(device, device.logger, "reward_share/action",      params.action               * components.action_cost      / components.weighted_cost, cadence);
+        add_scalar(device, device.logger, "reward_share/action",      components.action_cost      / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/const",       components.reward/params.constant, cadence);
 
         add_scalar(device, device.logger, "reward/weighted_cost",        components.weighted_cost, cadence);

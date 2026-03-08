@@ -1,4 +1,3 @@
-
 set(INSTALL_GTEST OFF CACHE BOOL "")
 set(BUILD_GMOCK OFF CACHE BOOL "")
 add_subdirectory(lib/googletest EXCLUDE_FROM_ALL)
@@ -21,6 +20,26 @@ target_link_libraries(
         learning_to_fly
 )
 gtest_discover_tests(test_rl_environments_multirotor_multirotor)
+
+
+# CTBR (Collective Thrust + Body Rates) pipeline tests
+add_executable(
+        test_ctbr
+        ctbr.cpp
+)
+target_link_libraries(
+        test_ctbr
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+# Expose src/ so ctbr.cpp can include src/config/parameters.h
+target_include_directories(
+        test_ctbr
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+)
+gtest_discover_tests(test_ctbr)
 
 
 

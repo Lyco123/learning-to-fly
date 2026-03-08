@@ -185,6 +185,44 @@ test_rl_environments_multirotor_multirotor/fast:
 	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build.make test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build
 .PHONY : test_rl_environments_multirotor_multirotor/fast
 
+# Convenience name for target.
+test/CMakeFiles/test_ctbr.dir/rule:
+	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/CMakeFiles/test_ctbr.dir/rule
+.PHONY : test/CMakeFiles/test_ctbr.dir/rule
+
+# Convenience name for target.
+test_ctbr: test/CMakeFiles/test_ctbr.dir/rule
+.PHONY : test_ctbr
+
+# fast build rule for target.
+test_ctbr/fast:
+	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/build
+.PHONY : test_ctbr/fast
+
+ctbr.o: ctbr.cpp.o
+.PHONY : ctbr.o
+
+# target to build an object file
+ctbr.cpp.o:
+	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/ctbr.cpp.o
+.PHONY : ctbr.cpp.o
+
+ctbr.i: ctbr.cpp.i
+.PHONY : ctbr.i
+
+# target to preprocess a source file
+ctbr.cpp.i:
+	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/ctbr.cpp.i
+.PHONY : ctbr.cpp.i
+
+ctbr.s: ctbr.cpp.s
+.PHONY : ctbr.s
+
+# target to generate assembly for a file
+ctbr.cpp.s:
+	cd /home/runner/work/learning-to-fly/learning-to-fly/build_test && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/ctbr.cpp.s
+.PHONY : ctbr.cpp.s
+
 multirotor.o: multirotor.cpp.o
 .PHONY : multirotor.o
 
@@ -222,7 +260,11 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... test_ctbr"
 	@echo "... test_rl_environments_multirotor_multirotor"
+	@echo "... ctbr.o"
+	@echo "... ctbr.i"
+	@echo "... ctbr.s"
 	@echo "... multirotor.o"
 	@echo "... multirotor.i"
 	@echo "... multirotor.s"

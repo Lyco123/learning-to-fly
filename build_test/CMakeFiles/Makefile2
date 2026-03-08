@@ -452,10 +452,12 @@ src/clean: src/CMakeFiles/training_benchmark.dir/clean
 
 # Recursive "all" directory target.
 test/all: test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/all
+test/all: test/CMakeFiles/test_ctbr.dir/all
 .PHONY : test/all
 
 # Recursive "codegen" directory target.
 test/codegen: test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/codegen
+test/codegen: test/CMakeFiles/test_ctbr.dir/codegen
 .PHONY : test/codegen
 
 # Recursive "preinstall" directory target.
@@ -464,6 +466,7 @@ test/preinstall:
 
 # Recursive "clean" directory target.
 test/clean: test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/clean
+test/clean: test/CMakeFiles/test_ctbr.dir/clean
 test/clean: test/lib/googletest/clean
 .PHONY : test/clean
 
@@ -739,7 +742,7 @@ external/rl_tools/src/rl/environments/acrobot/sac/CMakeFiles/rl_environments_acr
 src/CMakeFiles/ui.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ui.dir/build.make src/CMakeFiles/ui.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ui.dir/build.make src/CMakeFiles/ui.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=25,26 "Built target ui"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=27,28 "Built target ui"
 .PHONY : src/CMakeFiles/ui.dir/all
 
 # Build rule for subdir invocation for target.
@@ -756,7 +759,7 @@ ui: src/CMakeFiles/ui.dir/rule
 # codegen rule for target.
 src/CMakeFiles/ui.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ui.dir/build.make src/CMakeFiles/ui.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=25,26 "Finished codegen for target ui"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=27,28 "Finished codegen for target ui"
 .PHONY : src/CMakeFiles/ui.dir/codegen
 
 # clean rule for target.
@@ -771,7 +774,7 @@ src/CMakeFiles/ui.dir/clean:
 src/CMakeFiles/training_headless.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_headless.dir/build.make src/CMakeFiles/training_headless.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_headless.dir/build.make src/CMakeFiles/training_headless.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=23,24 "Built target training_headless"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=25,26 "Built target training_headless"
 .PHONY : src/CMakeFiles/training_headless.dir/all
 
 # Build rule for subdir invocation for target.
@@ -788,7 +791,7 @@ training_headless: src/CMakeFiles/training_headless.dir/rule
 # codegen rule for target.
 src/CMakeFiles/training_headless.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_headless.dir/build.make src/CMakeFiles/training_headless.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=23,24 "Finished codegen for target training_headless"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=25,26 "Finished codegen for target training_headless"
 .PHONY : src/CMakeFiles/training_headless.dir/codegen
 
 # clean rule for target.
@@ -803,7 +806,7 @@ src/CMakeFiles/training_headless.dir/clean:
 src/CMakeFiles/training_benchmark.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_benchmark.dir/build.make src/CMakeFiles/training_benchmark.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_benchmark.dir/build.make src/CMakeFiles/training_benchmark.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=21,22 "Built target training_benchmark"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=23,24 "Built target training_benchmark"
 .PHONY : src/CMakeFiles/training_benchmark.dir/all
 
 # Build rule for subdir invocation for target.
@@ -820,7 +823,7 @@ training_benchmark: src/CMakeFiles/training_benchmark.dir/rule
 # codegen rule for target.
 src/CMakeFiles/training_benchmark.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/training_benchmark.dir/build.make src/CMakeFiles/training_benchmark.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=21,22 "Finished codegen for target training_benchmark"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=23,24 "Finished codegen for target training_benchmark"
 .PHONY : src/CMakeFiles/training_benchmark.dir/codegen
 
 # clean rule for target.
@@ -836,7 +839,7 @@ test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/all: test/lib/goo
 test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/all: test/lib/googletest/googletest/CMakeFiles/gtest_main.dir/all
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build.make test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/depend
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build.make test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=19,20 "Built target test_rl_environments_multirotor_multirotor"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=21,22 "Built target test_rl_environments_multirotor_multirotor"
 .PHONY : test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/all
 
 # Build rule for subdir invocation for target.
@@ -853,13 +856,46 @@ test_rl_environments_multirotor_multirotor: test/CMakeFiles/test_rl_environments
 # codegen rule for target.
 test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build.make test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=19,20 "Finished codegen for target test_rl_environments_multirotor_multirotor"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=21,22 "Finished codegen for target test_rl_environments_multirotor_multirotor"
 .PHONY : test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/codegen
 
 # clean rule for target.
 test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/clean:
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/build.make test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/clean
 .PHONY : test/CMakeFiles/test_rl_environments_multirotor_multirotor.dir/clean
+
+#=============================================================================
+# Target rules for target test/CMakeFiles/test_ctbr.dir
+
+# All Build rule for target.
+test/CMakeFiles/test_ctbr.dir/all: test/lib/googletest/googletest/CMakeFiles/gtest.dir/all
+test/CMakeFiles/test_ctbr.dir/all: test/lib/googletest/googletest/CMakeFiles/gtest_main.dir/all
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/depend
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=19,20 "Built target test_ctbr"
+.PHONY : test/CMakeFiles/test_ctbr.dir/all
+
+# Build rule for subdir invocation for target.
+test/CMakeFiles/test_ctbr.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles 6
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/CMakeFiles/test_ctbr.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles 0
+.PHONY : test/CMakeFiles/test_ctbr.dir/rule
+
+# Convenience name for target.
+test_ctbr: test/CMakeFiles/test_ctbr.dir/rule
+.PHONY : test_ctbr
+
+# codegen rule for target.
+test/CMakeFiles/test_ctbr.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/learning-to-fly/learning-to-fly/build_test/CMakeFiles --progress-num=19,20 "Finished codegen for target test_ctbr"
+.PHONY : test/CMakeFiles/test_ctbr.dir/codegen
+
+# clean rule for target.
+test/CMakeFiles/test_ctbr.dir/clean:
+	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_ctbr.dir/build.make test/CMakeFiles/test_ctbr.dir/clean
+.PHONY : test/CMakeFiles/test_ctbr.dir/clean
 
 #=============================================================================
 # Target rules for target test/lib/googletest/googletest/CMakeFiles/gtest.dir
