@@ -420,6 +420,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
             0.01, // action
+            0.01, // action_tilt
+            0.005, // action_yaw
+            0.02, // action_thrust
+            true, // use_split_action_weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_position_only_torque_curriculum_target = {
@@ -435,6 +439,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
             1.00, // action
+            1.00, // action_tilt
+            0.50, // action_yaw
+            1.50, // action_thrust
+            true, // use_split_action_weights
     };
     template<typename T>
     constexpr Squared<T> reward_squared_fast_learning = {

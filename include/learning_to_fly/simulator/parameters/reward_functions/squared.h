@@ -20,6 +20,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         T angular_acceleration;
         T action_baseline;
         T action;
+        T action_tilt = 0;
+        T action_yaw = 0;
+        T action_thrust = 0;
+        bool use_split_action_weights = false;
         struct Components{
             T orientation_cost;
             T position_cost;
@@ -28,6 +32,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             T linear_acc_cost;
             T angular_acc_cost;
             T action_cost;
+            T action_tilt_cost;
+            T action_yaw_cost;
+            T action_thrust_cost;
             T weighted_cost;
             T scaled_weighted_cost;
             T reward;
@@ -55,7 +62,13 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         }
         components.action_cost = utils::vector_operations::norm<DEVICE, T, ACTION_DIM>(action_diff);
         components.action_cost *= components.action_cost;
-        components.weighted_cost = params.position * components.position_cost + params.orientation * components.orientation_cost + params.linear_velocity * components.linear_vel_cost + params.angular_velocity * components.angular_vel_cost + params.linear_acceleration * components.linear_acc_cost + params.angular_acceleration * components.angular_acc_cost + params.action * components.action_cost;
+        components.action_tilt_cost = action_diff[0] * action_diff[0] + action_diff[1] * action_diff[1];
+        components.action_yaw_cost = action_diff[2] * action_diff[2];
+        components.action_thrust_cost = action_diff[3] * action_diff[3];
+        const T action_weighted_cost = params.use_split_action_weights
+            ? (params.action_tilt * components.action_tilt_cost + params.action_yaw * components.action_yaw_cost + params.action_thrust * components.action_thrust_cost)
+            : (params.action * components.action_cost);
+        components.weighted_cost = params.position * components.position_cost + params.orientation * components.orientation_cost + params.linear_velocity * components.linear_vel_cost + params.angular_velocity * components.angular_vel_cost + params.linear_acceleration * components.linear_acc_cost + params.angular_acceleration * components.angular_acc_cost + action_weighted_cost;
         bool terminated_flag = terminated(device, env, next_state, rng);
         components.scaled_weighted_cost = params.scale * components.weighted_cost;
 
@@ -80,6 +93,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         add_scalar(device, device.logger, "reward/linear_acc_cost",  components.linear_acc_cost, cadence);
         add_scalar(device, device.logger, "reward/angular_acc_cost", components.angular_acc_cost, cadence);
         add_scalar(device, device.logger, "reward/action_cost",      components.action_cost, cadence);
+        add_scalar(device, device.logger, "reward/action_tilt_cost", components.action_tilt_cost, cadence);
+        add_scalar(device, device.logger, "reward/action_yaw_cost", components.action_yaw_cost, cadence);
+        add_scalar(device, device.logger, "reward/action_thrust_cost", components.action_thrust_cost, cadence);
         add_scalar(device, device.logger, "reward/pre_exp",         -components.weighted_cost, cadence);
 
         add_scalar(device, device.logger, "reward_weighted/orientation_cost", params.orientation          * components.orientation_cost, cadence);
@@ -88,7 +104,13 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         add_scalar(device, device.logger, "reward_weighted/angular_vel_cost", params.angular_velocity     * components.angular_vel_cost, cadence);
         add_scalar(device, device.logger, "reward_weighted/linear_acc_cost" , params.linear_acceleration  * components.linear_acc_cost,  cadence);
         add_scalar(device, device.logger, "reward_weighted/angular_acc_cost", params.angular_acceleration * components.angular_acc_cost, cadence);
-        add_scalar(device, device.logger, "reward_weighted/action_cost",      params.action               * components.action_cost,      cadence);
+        const T weighted_action_cost = params.use_split_action_weights
+            ? (params.action_tilt * components.action_tilt_cost + params.action_yaw * components.action_yaw_cost + params.action_thrust * components.action_thrust_cost)
+            : (params.action * components.action_cost);
+        add_scalar(device, device.logger, "reward_weighted/action_cost",      weighted_action_cost,      cadence);
+        add_scalar(device, device.logger, "reward_weighted/action_tilt_cost", params.action_tilt * components.action_tilt_cost, cadence);
+        add_scalar(device, device.logger, "reward_weighted/action_yaw_cost", params.action_yaw * components.action_yaw_cost, cadence);
+        add_scalar(device, device.logger, "reward_weighted/action_thrust_cost", params.action_thrust * components.action_thrust_cost, cadence);
         // log share of the weighted abs cost
         add_scalar(device, device.logger, "reward_share/orientation", params.orientation          * components.orientation_cost / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/position",    params.position             * components.position_cost    / components.weighted_cost, cadence);
@@ -96,7 +118,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         add_scalar(device, device.logger, "reward_share/angular_vel", params.angular_velocity     * components.angular_vel_cost / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/linear_acc",  params.linear_acceleration  * components.linear_acc_cost  / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/angular_acc", params.angular_acceleration * components.angular_acc_cost / components.weighted_cost, cadence);
-        add_scalar(device, device.logger, "reward_share/action",      params.action               * components.action_cost      / components.weighted_cost, cadence);
+        add_scalar(device, device.logger, "reward_share/action",      weighted_action_cost / components.weighted_cost, cadence);
         add_scalar(device, device.logger, "reward_share/const",       components.reward/params.constant, cadence);
 
         add_scalar(device, device.logger, "reward/weighted_cost",        components.weighted_cost, cadence);
