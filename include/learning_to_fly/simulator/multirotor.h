@@ -2,6 +2,8 @@
 #define LEARNING_TO_FLY_IN_SECONDS_SIMULATOR_MULTIROTOR_H
 
 #include <rl_tools/utils/generic/typing.h>
+#include "rate_controller.h"
+#include "mixer.h"
 
 namespace rl_tools::rl::environments::multirotor{
     template <typename T, typename TI, TI N, typename T_REWARD_FUNCTION>
@@ -37,6 +39,9 @@ namespace rl_tools::rl::environments::multirotor{
                 bool relative_rpm; //(specification from -1 to 1)
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
+                // CTBR action semantics: policy action [-1, 1] is scaled to these command limits.
+                T max_commanded_angular_velocity = 12;
+                T max_commanded_thrust_acceleration = 15;
             };
             struct Termination{
                 bool enabled = false;
@@ -53,10 +58,15 @@ namespace rl_tools::rl::environments::multirotor{
             struct ActionNoise{
                 T normalized_rpm; // std of additive gaussian noise onto the normalized action (-1, 1)
             };
+            struct Control{
+                RateControllerParameters<T> rate_controller;
+                MixerParameters<T> mixer;
+            };
             Initialization init;
             REWARD_FUNCTION reward;
             ObservationNoise observation_noise;
             ActionNoise action_noise;
+            Control control;
             Termination termination;
         };
         Dynamics dynamics;
@@ -213,6 +223,46 @@ namespace rl_tools::rl::environments::multirotor{
             using NEXT_COMPONENT = typename SPEC::NEXT_COMPONENT;
             static constexpr bool PRIVILEGED = SPEC::PRIVILEGED;
             static constexpr TI CURRENT_DIM = 3;
+            static constexpr TI DIM = NEXT_COMPONENT::DIM + CURRENT_DIM;
+        };
+        template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
+        struct AngularVelocityCommandSpecification {
+            using T = T_T;
+            using TI = T_TI;
+            using NEXT_COMPONENT = T_NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = false;
+        };
+        template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
+        struct AngularVelocityCommandSpecificationPrivileged: AngularVelocityCommandSpecification<T_T, T_TI, T_NEXT_COMPONENT>{
+            static constexpr bool PRIVILEGED = true;
+        };
+        template <typename SPEC>
+        struct AngularVelocityCommand{
+            using T = typename SPEC::T;
+            using TI = typename SPEC::TI;
+            using NEXT_COMPONENT = typename SPEC::NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = SPEC::PRIVILEGED;
+            static constexpr TI CURRENT_DIM = 3;
+            static constexpr TI DIM = NEXT_COMPONENT::DIM + CURRENT_DIM;
+        };
+        template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
+        struct ThrustAccelerationCommandSpecification {
+            using T = T_T;
+            using TI = T_TI;
+            using NEXT_COMPONENT = T_NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = false;
+        };
+        template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
+        struct ThrustAccelerationCommandSpecificationPrivileged: ThrustAccelerationCommandSpecification<T_T, T_TI, T_NEXT_COMPONENT>{
+            static constexpr bool PRIVILEGED = true;
+        };
+        template <typename SPEC>
+        struct ThrustAccelerationCommand{
+            using T = typename SPEC::T;
+            using TI = typename SPEC::TI;
+            using NEXT_COMPONENT = typename SPEC::NEXT_COMPONENT;
+            static constexpr bool PRIVILEGED = SPEC::PRIVILEGED;
+            static constexpr TI CURRENT_DIM = 1;
             static constexpr TI DIM = NEXT_COMPONENT::DIM + CURRENT_DIM;
         };
         template <typename T_T, typename T_TI, typename T_NEXT_COMPONENT = LastComponent<T_TI>>
