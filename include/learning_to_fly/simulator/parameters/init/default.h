@@ -3,6 +3,8 @@
 #define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_POSITION (0.2)
 #define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_LINEAR_VELOCITY (1)
 #define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_ANGULAR_VELOCITY (1)
+#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_MAX_COMMANDED_ANGULAR_VELOCITY (12)
+#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_MAX_COMMANDED_THRUST_ACCELERATION (15)
 
 namespace rl_tools::rl::environments::multirotor::parameters::init{
     template<typename T, typename TI, TI ACTION_DIM, typename REWARD_FUNCTION>
@@ -81,6 +83,8 @@ namespace rl_tools::rl::environments::multirotor::parameters::init{
             true,// relative rpm
             0,  // min rpm
             0,  // max rpm
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_MAX_COMMANDED_ANGULAR_VELOCITY,
+            RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_INIT_MAX_COMMANDED_THRUST_ACCELERATION,
     };
     template<typename T, typename TI, TI ACTION_DIM, typename REWARD_FUNCTION>
     constexpr typename ParametersBase<T, TI, ACTION_DIM, REWARD_FUNCTION>::MDP::Initialization all_around_simplified = {
