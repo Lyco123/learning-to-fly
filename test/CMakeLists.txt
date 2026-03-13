@@ -22,6 +22,66 @@ target_link_libraries(
 )
 gtest_discover_tests(test_rl_environments_multirotor_multirotor)
 
+add_executable(
+        test_learning_to_fly_observation_packing
+        observation_packing.cpp
+)
+target_link_libraries(
+        test_learning_to_fly_observation_packing
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_learning_to_fly_observation_packing)
+
+add_executable(
+        test_learning_to_fly_action_semantics
+        action_semantics.cpp
+)
+target_link_libraries(
+        test_learning_to_fly_action_semantics
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_learning_to_fly_action_semantics)
+
+add_executable(
+        test_learning_to_fly_rate_controller
+        rate_controller.cpp
+)
+target_link_libraries(
+        test_learning_to_fly_rate_controller
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_learning_to_fly_rate_controller)
+
+add_executable(
+        test_learning_to_fly_mixer
+        mixer.cpp
+)
+target_link_libraries(
+        test_learning_to_fly_mixer
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_learning_to_fly_mixer)
+
+add_executable(
+        test_learning_to_fly_control_chain_step5
+        control_chain_step5.cpp
+)
+target_link_libraries(
+        test_learning_to_fly_control_chain_step5
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_learning_to_fly_control_chain_step5)
+
 
 
 # Multirotor UI test

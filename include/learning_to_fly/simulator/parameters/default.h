@@ -39,6 +39,20 @@ namespace rl_tools::rl::environments::multirotor::parameters {
             {   // Action noise
                     0, // std of additive gaussian noise onto the normalized action (-1, 1)
             },
+                {   // Control parameters
+                    {   // rate controller
+                        {0.08, 0.08, 0.04},
+                        {0.0006, 0.0006, 0.0002}
+                    },
+                    {   // mixer
+                        0.028,
+                        0.005964552,
+                        3.16e-10,
+                        0.027,
+                        0,
+                        21702
+                    }
+                },
             rl_tools::rl::environments::multirotor::parameters::termination::fast_learning<T, TI, 4, REWARD_FUNCTION<T>>
     };
     template<typename T, typename TI>

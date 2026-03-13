@@ -145,7 +145,7 @@ def mode_takeoff_and_switch(cf, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    default_uri = 'radio://0/80/2M/E7E7E7E7E7'
+    default_uri = 'udp://0.0.0.0:19850'
     parser.add_argument('--uri', default=default_uri)
     parser.add_argument('--height', default=0.2, type=float)
     parser.add_argument('--mode', default='hover_learned', choices=['hover_learned', 'hover_original', 'takeoff_and_switch', 'trajectory_tracking'])

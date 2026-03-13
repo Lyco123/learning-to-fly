@@ -60,6 +60,20 @@ namespace parameters{
                             {   // Action noise
                                     0, // std of additive gaussian noise onto the normalized action (-1, 1)
                             },
+                                {   // Control parameters
+                                    {   // rate controller
+                                        {0.08, 0.08, 0.04},      // k_p [roll, pitch, yaw]
+                                        {0.0006, 0.0006, 0.0002} // max_torque [roll, pitch, yaw]
+                                    },
+                                    {   // mixer
+                                        0.028, // arm_length
+                                        0.005964552, // yaw_torque_constant
+                                        3.16e-10, // thrust_coefficient
+                                        0.027, // mass
+                                        0, // min_rpm
+                                        21702 // max_rpm
+                                    }
+                                },
                             rl_tools::rl::environments::multirotor::parameters::termination::fast_learning<T, TI, 4, REWARD_FUNCTION>
                     },
                     typename PARAMETERS_TYPE::Disturbances{
@@ -79,27 +93,25 @@ namespace parameters{
                         StateRotors<T, TI, rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE, StateRandomForce<T, TI, StateBase<T, TI>>, StateBase<T, TI>>>>,
                     rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE, StateRandomForce<T, TI, StateBase<T, TI>>, StateBase<T, TI>>>;
                 using OBSERVATION_TYPE = observation::Position<observation::PositionSpecification<T, TI,
-                        observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecification<T, TI,
-                                observation::LinearVelocity<observation::LinearVelocitySpecification<T, TI,
-                                        observation::AngularVelocity<observation::AngularVelocitySpecification<T, TI,
-                                                rlt::utils::typing::conditional_t<ABLATION_SPEC::ACTION_HISTORY, observation::ActionHistory<observation::ActionHistorySpecification<T, TI, ACTION_HISTORY_LENGTH>>, observation::LastComponent<TI>>>>>>>>>>;
+                    observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecification<T, TI,
+                        observation::LinearVelocity<observation::LinearVelocitySpecification<T, TI,
+                            observation::LastComponent<TI>
+                        >>
+                    >>
+                >>;
                 using OBSERVATION_TYPE_PRIVILEGED = rlt::utils::typing::conditional_t<ABLATION_SPEC::ASYMMETRIC_ACTOR_CRITIC,
                     observation::Position<observation::PositionSpecificationPrivileged<T, TI,
                         observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecificationPrivileged<T, TI,
                             observation::LinearVelocity<observation::LinearVelocitySpecificationPrivileged<T, TI,
-                                observation::AngularVelocity<observation::AngularVelocitySpecificationPrivileged<T, TI,
-                                    rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE,
-                                        observation::RandomForce<observation::RandomForceSpecification<T, TI,
-                                            rlt::utils::typing::conditional_t<ABLATION_SPEC::ROTOR_DELAY,
-                                                observation::RotorSpeeds<observation::RotorSpeedsSpecification<T, TI>>,
+                                observation::AngularVelocityCommand<observation::AngularVelocityCommandSpecificationPrivileged<T, TI,
+                                    observation::ThrustAccelerationCommand<observation::ThrustAccelerationCommandSpecificationPrivileged<T, TI,
+                                        rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE,
+                                            observation::RandomForce<observation::RandomForceSpecification<T, TI,
                                                 observation::LastComponent<TI>
-                                            >
-                                        >>,
-                                        rlt::utils::typing::conditional_t<ABLATION_SPEC::ROTOR_DELAY,
-                                                observation::RotorSpeeds<observation::RotorSpeedsSpecification<T, TI>>,
-                                                observation::LastComponent<TI>
+                                            >>,
+                                            observation::LastComponent<TI>
                                         >
-                                    >
+                                    >>
                                 >>
                             >>
                         >>
