@@ -11,6 +11,22 @@ namespace rl_tools::rl::environments::multirotor{
                 T min;
                 T max;
             };
+            struct ControlLimits{
+                T max_tilt_angular_velocity = 10;
+                T max_yaw_angular_velocity = 5;
+                T thrust_acceleration_min = 0;
+                T thrust_acceleration_max = 19.62;
+            };
+            struct RateController{
+                T kp[3] = {(T)0.0025, (T)0.0025, (T)0.0015};
+                T ki[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T kd[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T kff[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T integral_limit[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T torque_limit[3] = {(T)0.02, (T)0.02, (T)0.01};
+                T derivative_lpf_alpha[3] = {(T)0.7, (T)0.7, (T)0.7};
+                T gyroscopic_compensation_gain = (T)1.0;
+            };
             T rotor_positions[N][3];
             T rotor_thrust_directions[N][3];
             T rotor_torque_directions[N][3];
@@ -22,12 +38,18 @@ namespace rl_tools::rl::environments::multirotor{
             T J_inv[3][3];
             T rpm_time_constant;
             ActionLimit action_limit;
+            ControlLimits control_limits;
+            RateController rate_controller;
         };
+
         struct Integration{
             T dt;
         };
+
         struct MDP{
+            
             using REWARD_FUNCTION = T_REWARD_FUNCTION;
+
             struct Initialization{
                 T guidance;
                 T max_position;
@@ -37,22 +59,34 @@ namespace rl_tools::rl::environments::multirotor{
                 bool relative_rpm; //(specification from -1 to 1)
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
+                T max_tilt_angular_velocity_command = 4;
+                T max_yaw_angular_velocity_command = 2;
+                bool relative_thrust_acceleration = true;
+                T min_thrust_acceleration = -0.2;
+                T max_thrust_acceleration = 0.2;
             };
+
+            /* termination */
             struct Termination{
                 bool enabled = false;
                 T position_threshold;
                 T linear_velocity_threshold;
                 T angular_velocity_threshold;
             };
+
+            /* observation noise */
             struct ObservationNoise{
                 T position;
                 T orientation;
                 T linear_velocity;
                 T angular_velocity;
             };
+
+            /* action noise */
             struct ActionNoise{
-                T normalized_rpm; // std of additive gaussian noise onto the normalized action (-1, 1)
+                T normalized_rpm; // std of additive gaussian noise onto the normalized ctbr action (-1, 1)
             };
+
             Initialization init;
             REWARD_FUNCTION reward;
             ObservationNoise observation_noise;
@@ -63,6 +97,8 @@ namespace rl_tools::rl::environments::multirotor{
         Integration integration;
         MDP mdp;
     };
+
+    /* disturbances */
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDisturbances: T_NEXT_COMPONENT{
         struct Disturbances{
@@ -76,6 +112,7 @@ namespace rl_tools::rl::environments::multirotor{
         Disturbances disturbances;
     };
 
+    /* domain randomization */
     template <typename T, typename TI, typename T_NEXT_COMPONENT>
     struct ParametersDomainRandomization: T_NEXT_COMPONENT{
         struct DomainRandomization{
@@ -384,6 +421,13 @@ namespace rl_tools::rl::environments{
         using STATIC_PARAMETERS = typename SPEC::STATIC_PARAMETERS;
         typename SPEC::PARAMETERS parameters;
         typename SPEC::PARAMETERS::Dynamics current_dynamics;
+        struct RateControllerState{
+            T integral[3] = {0, 0, 0};
+            T prev_angular_velocity[3] = {0, 0, 0};
+            T prev_derivative[3] = {0, 0, 0};
+            bool initialized = false;
+        };
+        mutable RateControllerState rate_controller_state;
     };
 }
 

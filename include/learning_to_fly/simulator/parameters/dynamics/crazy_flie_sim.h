@@ -3,30 +3,31 @@
 
 namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
     template<typename T, typename TI, typename REWARD_FUNCTION>
-    constexpr typename ParametersBase <T, TI, TI(4), REWARD_FUNCTION>::Dynamics crazy_flie = {
-            // Rotor positions
+        constexpr typename ParametersBase <T, TI, TI(4), REWARD_FUNCTION>::Dynamics crazy_flie_sim = {
+            // Rotor positions in FLU body frame (x: forward, y: left, z: up).
+            // Do not directly reuse PX4 FRD motor indexing here.
             {
                     {
-                            0.028,
-                            -0.028,
+                            0.031,
+                            -0.031,
                             0
 
                     },
                     {
-                            -0.028,
-                            -0.028,
+                            -0.031,
+                            -0.031,
                             0
 
                     },
                     {
-                            -0.028,
-                            0.028,
+                            -0.031,
+                            0.031,
                             0
 
                     },
                     {
-                            0.028,
-                            0.028,
+                            0.031,
+                            0.031,
                             0
 
                     },
@@ -49,54 +50,72 @@ namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
             {
                     0,
                     0,
-                    3.16e-10
+                    1.7965e-8
             },
             // torque constant
 //            0.025126582278481014,
             0.005964552,
             // mass vehicle
-            0.027,
+            0.025,
             // gravity
             {0, 0, -9.81},
             // J
             {
                     {
-                            3.85e-6,
+                            0.000016572,
                             0.0000000000000000000000000000000000000000,
                             0.0000000000000000000000000000000000000000
                     },
                     {
                             0.0000000000000000000000000000000000000000,
-                            3.85e-6,
+                            0.000016656,
                             0.0000000000000000000000000000000000000000
                     },
                     {
                             0.0000000000000000000000000000000000000000,
                             0.0000000000000000000000000000000000000000,
-                            5.9675e-6
+                            0.000029262
                     }
             },
             // J_inv
             {
                     {
-                            259740.2597402597,
+                            60342.7468,
                             0.0000000000000000000000000000000000000000,
                             0.0000000000000000000000000000000000000000
                     },
                     {
                             0.0000000000000000000000000000000000000000,
-                            259740.2597402597,
+                            60038.4245,
                             0.0000000000000000000000000000000000000000
                     },
                     {
                             0.0000000000000000000000000000000000000000,
                             0.0000000000000000000000000000000000000000,
-                            167574.36112274823
+                            34174.0141
 
                     }
             },
             // T, RPM time constant
-            0.15,
+            0.05,
             // action limit
-            {0, 21702},    };
+            {0, 3052},
+            // control limits (ctbr)
+            {10.0, 5.0, 0.0, 19.62},
+            // rate controller
+            {
+                                {0.00035, 0.00040, 0.00028},//P
+                                {0.00060, 0.00060, 0.00025},//i
+                                {0.00012, 0.00012, 0.00006},//d
+                {0.0, 0.0, 0.0},//kff
+                                {0.08, 0.08, 0.20},//ilimit
+                                {0.0015, 0.0015, 0.0012},
+                                                                {0.85, 0.85, 0.90},
+                                                                0.8
+            }
+    };
+
+        // Backward-compatible alias for older call sites.
+        template<typename T, typename TI, typename REWARD_FUNCTION>
+        constexpr auto crazy_flie = crazy_flie_sim<T, TI, REWARD_FUNCTION>;
 }
