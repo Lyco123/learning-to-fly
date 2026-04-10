@@ -374,28 +374,43 @@ namespace rl_tools{
     template<typename DEVICE, typename T, typename TI, typename SPEC, typename NEXT_COMPONENT, typename RNG>
     RL_TOOLS_FUNCTION_PLACEMENT static void sample_initial_state(DEVICE& device, rl::environments::Multirotor<SPEC>& env, typename rl::environments::multirotor::StateRotors<T, TI, NEXT_COMPONENT>& state, RNG& rng){
         sample_initial_state(device, env, static_cast<NEXT_COMPONENT&>(state), rng);
-        T min_thrust_acceleration, max_thrust_acceleration;
-        if(env.parameters.mdp.init.relative_thrust_acceleration){
-            const T min_action = env.parameters.mdp.init.min_thrust_acceleration;
-            const T max_action = env.parameters.mdp.init.max_thrust_acceleration;
-            min_thrust_acceleration = ((min_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
-            max_thrust_acceleration = ((max_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
+        // T min_thrust_acceleration, max_thrust_acceleration;
+        // if(env.parameters.mdp.init.relative_thrust_acceleration){
+        //     const T min_action = env.parameters.mdp.init.min_thrust_acceleration;
+        //     const T max_action = env.parameters.mdp.init.max_thrust_acceleration;
+        //     min_thrust_acceleration = ((min_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
+        //     max_thrust_acceleration = ((max_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
+        // }
+        // else{
+        //     min_thrust_acceleration = env.parameters.mdp.init.min_thrust_acceleration;
+        //     max_thrust_acceleration = env.parameters.mdp.init.max_thrust_acceleration;
+        //     min_thrust_acceleration = math::clamp(device.math, min_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
+        //     max_thrust_acceleration = math::clamp(device.math, max_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
+        //     if(min_thrust_acceleration > max_thrust_acceleration){
+        //         min_thrust_acceleration = max_thrust_acceleration;
+        //     }
+        // }
+         T min_rpm, max_rpm;
+        if(env.parameters.mdp.init.relative_rpm){
+            min_rpm = (env.parameters.mdp.init.min_rpm + 1)/2 * (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) + env.parameters.dynamics.action_limit.min;
+            max_rpm = (env.parameters.mdp.init.max_rpm + 1)/2 * (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) + env.parameters.dynamics.action_limit.min;
         }
         else{
-            min_thrust_acceleration = env.parameters.mdp.init.min_thrust_acceleration;
-            max_thrust_acceleration = env.parameters.mdp.init.max_thrust_acceleration;
-            min_thrust_acceleration = math::clamp(device.math, min_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
-            max_thrust_acceleration = math::clamp(device.math, max_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
-            if(min_thrust_acceleration > max_thrust_acceleration){
-                min_thrust_acceleration = max_thrust_acceleration;
+            min_rpm = env.parameters.mdp.init.min_rpm < 0 ? env.parameters.dynamics.action_limit.min : env.parameters.mdp.init.min_rpm;
+            max_rpm = env.parameters.mdp.init.max_rpm < 0 ? env.parameters.dynamics.action_limit.max : env.parameters.mdp.init.max_rpm;
+            if(max_rpm > env.parameters.dynamics.action_limit.max){
+                max_rpm = env.parameters.dynamics.action_limit.max;
+            }
+            if(min_rpm > max_rpm){
+                min_rpm = max_rpm;
             }
         }
-        const T thrust_acceleration = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_acceleration, max_thrust_acceleration, rng);
-        T torque_zero[3] = {0, 0, 0};
-        T rpm_target[4];
-        rl::environments::multirotor::mix_ctbr_to_rpm(device, env.parameters, thrust_acceleration, torque_zero, rpm_target);
+        // const T thrust_acceleration = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_acceleration, max_thrust_acceleration, rng);
+        // T torque_zero[3] = {0, 0, 0};
+        // T rpm_target[4];
+        // rl::environments::multirotor::mix_ctbr_to_rpm(device, env.parameters, thrust_acceleration, torque_zero, rpm_target);
         for(TI i = 0; i < 4; i++){
-            state.rpm[i] = rpm_target[i];
+            state.rpm[i] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_rpm, max_rpm, rng);
         }
     }
     template<typename DEVICE, typename T_S, typename TI_S, TI_S HISTORY_LENGTH, typename NEXT_COMPONENT, typename SPEC, typename RNG>
@@ -419,11 +434,18 @@ namespace rl_tools{
         if(min_thrust_command_normalized > max_thrust_command_normalized){
             min_thrust_command_normalized = max_thrust_command_normalized;
         }
+        // for(TI step_i = 0; step_i < HISTORY_LENGTH; step_i++){
+        //     state.action_history[step_i][0] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
+        //     state.action_history[step_i][1] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
+        //     state.action_history[step_i][2] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_yaw_command, max_yaw_command, rng);
+        //     state.action_history[step_i][3] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_command_normalized, max_thrust_command_normalized, rng);
+        // }
+
         for(TI step_i = 0; step_i < HISTORY_LENGTH; step_i++){
-            state.action_history[step_i][0] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
-            state.action_history[step_i][1] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
-            state.action_history[step_i][2] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_yaw_command, max_yaw_command, rng);
-            state.action_history[step_i][3] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_command_normalized, max_thrust_command_normalized, rng);
+            state.action_history[step_i][0] = 0.0;
+            state.action_history[step_i][1] = 0.0;
+            state.action_history[step_i][2] = 0.0;
+            state.action_history[step_i][3] = 0.0;
         }
     }
     namespace rl::environments::multirotor{
