@@ -22,6 +22,18 @@ target_link_libraries(
 )
 gtest_discover_tests(test_rl_environments_multirotor_multirotor)
 
+add_executable(
+        test_rl_environments_multirotor_ctbr_control_loop
+        ctbr_control_loop.cpp
+)
+target_link_libraries(
+        test_rl_environments_multirotor_ctbr_control_loop
+        rl_tools
+        rl_tools_tests
+        learning_to_fly
+)
+gtest_discover_tests(test_rl_environments_multirotor_ctbr_control_loop)
+
 
 
 # Multirotor UI test

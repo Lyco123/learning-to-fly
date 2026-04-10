@@ -4,7 +4,8 @@
 namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
     template<typename T, typename TI, typename REWARD_FUNCTION>
     constexpr typename ParametersBase <T, TI, TI(4), REWARD_FUNCTION>::Dynamics crazy_flie = {
-            // Rotor positions
+            // Rotor positions in FLU body frame (x: forward, y: left, z: up).
+            // Do not directly reuse PX4 FRD motor indexing here.
             {
                     {
                             0.031,
@@ -99,5 +100,12 @@ namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
             0.05,
             // action limit
             {0, 3052},
+            // control limits (ctbr)
+            {10.0, 5.0, 0.0, 19.62},
+            // rate controller
+            {
+                {0.025, 0.025, 0.015},
+                {0.02, 0.02, 0.01}
+            }
     };
 }

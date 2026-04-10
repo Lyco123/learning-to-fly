@@ -77,32 +77,19 @@ namespace parameters{
                         StateRotorsHistory<T, TI, ACTION_HISTORY_LENGTH, rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE, StateRandomForce<T, TI, StateBase<T, TI>>, StateBase<T, TI>>>,
                         StateRotors<T, TI, rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE, StateRandomForce<T, TI, StateBase<T, TI>>, StateBase<T, TI>>>>,
                     rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE, StateRandomForce<T, TI, StateBase<T, TI>>, StateBase<T, TI>>>;
-                using OBSERVATION_TYPE = observation::Position<observation::PositionSpecification<T, TI,
-                        observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecification<T, TI,
-                                observation::LinearVelocity<observation::LinearVelocitySpecification<T, TI,
-                                        observation::AngularVelocity<observation::AngularVelocitySpecification<T, TI,
-                                                rlt::utils::typing::conditional_t<ABLATION_SPEC::ACTION_HISTORY, observation::ActionHistory<observation::ActionHistorySpecification<T, TI, ACTION_HISTORY_LENGTH>>, observation::LastComponent<TI>>>>>>>>>>;
+                using ACTOR_OBSERVATION_BASE = observation::LinearVelocity<observation::LinearVelocitySpecification<T, TI, observation::LastComponent<TI>>>;
+                using ACTOR_OBSERVATION_ORIENTATION = observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecification<T, TI, ACTOR_OBSERVATION_BASE>>;
+                using OBSERVATION_TYPE = observation::Position<observation::PositionSpecification<T, TI, ACTOR_OBSERVATION_ORIENTATION>>;
+                using PRIVILEGED_COMMANDS = rlt::utils::typing::conditional_t<(ABLATION_SPEC::ROTOR_DELAY && ABLATION_SPEC::ACTION_HISTORY),
+                    observation::ActionHistory<observation::ActionHistorySpecification<T, TI, 1>>,
+                    observation::LastComponent<TI>>;
+                using PRIVILEGED_EXTRA = rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE,
+                    observation::RandomForce<observation::RandomForceSpecification<T, TI, PRIVILEGED_COMMANDS>>,
+                    PRIVILEGED_COMMANDS>;
+                using PRIVILEGED_OBSERVATION_BASE = observation::LinearVelocity<observation::LinearVelocitySpecificationPrivileged<T, TI, PRIVILEGED_EXTRA>>;
+                using PRIVILEGED_OBSERVATION_ORIENTATION = observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecificationPrivileged<T, TI, PRIVILEGED_OBSERVATION_BASE>>;
                 using OBSERVATION_TYPE_PRIVILEGED = rlt::utils::typing::conditional_t<ABLATION_SPEC::ASYMMETRIC_ACTOR_CRITIC,
-                    observation::Position<observation::PositionSpecificationPrivileged<T, TI,
-                        observation::OrientationRotationMatrix<observation::OrientationRotationMatrixSpecificationPrivileged<T, TI,
-                            observation::LinearVelocity<observation::LinearVelocitySpecificationPrivileged<T, TI,
-                                observation::AngularVelocity<observation::AngularVelocitySpecificationPrivileged<T, TI,
-                                    rlt::utils::typing::conditional_t<ABLATION_SPEC::DISTURBANCE,
-                                        observation::RandomForce<observation::RandomForceSpecification<T, TI,
-                                            rlt::utils::typing::conditional_t<ABLATION_SPEC::ROTOR_DELAY,
-                                                observation::RotorSpeeds<observation::RotorSpeedsSpecification<T, TI>>,
-                                                observation::LastComponent<TI>
-                                            >
-                                        >>,
-                                        rlt::utils::typing::conditional_t<ABLATION_SPEC::ROTOR_DELAY,
-                                                observation::RotorSpeeds<observation::RotorSpeedsSpecification<T, TI>>,
-                                                observation::LastComponent<TI>
-                                        >
-                                    >
-                                >>
-                            >>
-                        >>
-                    >>,
+                    observation::Position<observation::PositionSpecificationPrivileged<T, TI, PRIVILEGED_OBSERVATION_ORIENTATION>>,
                     observation::NONE<TI>
                 >;
                 static constexpr bool PRIVILEGED_OBSERVATION_NOISE = false;

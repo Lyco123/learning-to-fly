@@ -81,6 +81,11 @@ namespace rl_tools::rl::environments::multirotor::parameters::init{
             true,// relative rpm
             0,  // min rpm
             0,  // max rpm
+            4.0, // max tilt angular velocity command
+            2.0, // max yaw angular velocity command
+            true, // relative thrust acceleration
+            -0.2, // min thrust acceleration command
+            0.2, // max thrust acceleration command
     };
     template<typename T, typename TI, TI ACTION_DIM, typename REWARD_FUNCTION>
     constexpr typename ParametersBase<T, TI, ACTION_DIM, REWARD_FUNCTION>::MDP::Initialization all_around_simplified = {
@@ -114,5 +119,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::init{
             true,// relative rpm
             0,  // min rpm
             0,  // max rpm
+            4.0, // max tilt angular velocity command
+            2.0, // max yaw angular velocity command
+            true, // relative thrust acceleration
+            -0.2, // min thrust acceleration command
+            0.2, // max thrust acceleration command
     };
 }

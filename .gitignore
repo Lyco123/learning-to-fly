@@ -2,7 +2,9 @@
 /cmake-build-release*
 /checkpoints
 /build
+/build_tests
 /logs
 /.idea
 /**/*.h5
 *.bin
+*.pdf

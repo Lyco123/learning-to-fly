@@ -3,7 +3,7 @@
 #include "sq_exp.h"
 #include "squared.h"
 #include "absolute.h"
-#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE (0.3215)
+#define RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE (0.0)
 namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
     template<typename T>
     constexpr AbsExp<T> reward_263 = {
@@ -420,6 +420,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
             0.01, // action
+            1.0, // action_tilt
+            0.3, // action_yaw
+            0.6, // action_thrust_acceleration
     };
     template<typename T>
     constexpr Squared<T> reward_squared_position_only_torque_curriculum_target = {
@@ -435,6 +438,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
             0, // angular_acceleration
             RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE, // RL_TOOLS_RL_ENVIRONMENTS_MULTIROTOR_PARAMETERS_REWARD_FUNCTIONS_DEFAULT_ACTION_BASELINE
             1.00, // action
+            1.0, // action_tilt
+            0.3, // action_yaw
+            0.6, // action_thrust_acceleration
     };
     template<typename T>
     constexpr Squared<T> reward_squared_fast_learning = {
