@@ -101,10 +101,10 @@ namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
             // action limit
             {0, 3052},
             // control limits (ctbr)
-            {10.0, 5.0, 0.0, 19.62},
+            {4.0, 1.0, 0.0, 19.62},
             // rate controller
             {
-                {0.00035, 0.00040, 0.00028},//P
+                {0.4, 0.4, 0.2},//P
                 {0.00060, 0.00060, 0.00025},//i
                 {0.00012, 0.00012, 0.00006},//d
                 {0.0, 0.0, 0.0},//kff
