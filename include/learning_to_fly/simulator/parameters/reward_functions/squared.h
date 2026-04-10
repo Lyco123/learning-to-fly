@@ -20,6 +20,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         T angular_acceleration;
         T action_baseline;
         T action;
+        T action_tilt = 1;
+        T action_yaw = 1;
+        T action_thrust_acceleration = 1;
         struct Components{
             T orientation_cost;
             T position_cost;
@@ -53,8 +56,16 @@ namespace rl_tools::rl::environments::multirotor::parameters::reward_functions{
         for(TI i = 0; i < ACTION_DIM; i++){
             action_diff[i] = get(action, 0, i) - params.action_baseline;
         }
-        components.action_cost = utils::vector_operations::norm<DEVICE, T, ACTION_DIM>(action_diff);
-        components.action_cost *= components.action_cost;
+        if constexpr(ACTION_DIM == 4){
+            const T tilt_cost = action_diff[0] * action_diff[0] + action_diff[1] * action_diff[1];
+            const T yaw_cost = action_diff[2] * action_diff[2];
+            const T thrust_cost = action_diff[3] * action_diff[3];
+            components.action_cost = params.action_tilt * tilt_cost + params.action_yaw * yaw_cost + params.action_thrust_acceleration * thrust_cost;
+        }
+        else{
+            components.action_cost = utils::vector_operations::norm<DEVICE, T, ACTION_DIM>(action_diff);
+            components.action_cost *= components.action_cost;
+        }
         components.weighted_cost = params.position * components.position_cost + params.orientation * components.orientation_cost + params.linear_velocity * components.linear_vel_cost + params.angular_velocity * components.angular_vel_cost + params.linear_acceleration * components.linear_acc_cost + params.angular_acceleration * components.angular_acc_cost + params.action * components.action_cost;
         bool terminated_flag = terminated(device, env, next_state, rng);
         components.scaled_weighted_cost = params.scale * components.weighted_cost;

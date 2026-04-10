@@ -11,6 +11,22 @@ namespace rl_tools::rl::environments::multirotor{
                 T min;
                 T max;
             };
+            struct ControlLimits{
+                T max_tilt_angular_velocity = 10;
+                T max_yaw_angular_velocity = 5;
+                T thrust_acceleration_min = 0;
+                T thrust_acceleration_max = 19.62;
+            };
+            struct RateController{
+                T kp[3] = {(T)0.0025, (T)0.0025, (T)0.0015};
+                T ki[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T kd[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T kff[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T integral_limit[3] = {(T)0.0, (T)0.0, (T)0.0};
+                T torque_limit[3] = {(T)0.02, (T)0.02, (T)0.01};
+                T derivative_lpf_alpha[3] = {(T)0.7, (T)0.7, (T)0.7};
+                T gyroscopic_compensation_gain = (T)1.0;
+            };
             T rotor_positions[N][3];
             T rotor_thrust_directions[N][3];
             T rotor_torque_directions[N][3];
@@ -22,6 +38,8 @@ namespace rl_tools::rl::environments::multirotor{
             T J_inv[3][3];
             T rpm_time_constant;
             ActionLimit action_limit;
+            ControlLimits control_limits;
+            RateController rate_controller;
         };
 
         struct Integration{
@@ -41,6 +59,12 @@ namespace rl_tools::rl::environments::multirotor{
                 bool relative_rpm; //(specification from -1 to 1)
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
+
+                T max_tilt_angular_velocity_command = 4;
+                T max_yaw_angular_velocity_command = 2;
+                bool relative_thrust_acceleration = true;
+                T min_thrust_acceleration = -0.2;
+                T max_thrust_acceleration = 0.2;
             };
 
             /* termination */
@@ -398,6 +422,13 @@ namespace rl_tools::rl::environments{
         using STATIC_PARAMETERS = typename SPEC::STATIC_PARAMETERS;
         typename SPEC::PARAMETERS parameters;
         typename SPEC::PARAMETERS::Dynamics current_dynamics;
+        struct RateControllerState{
+            T integral[3] = {0, 0, 0};
+            T prev_angular_velocity[3] = {0, 0, 0};
+            T prev_derivative[3] = {0, 0, 0};
+            bool initialized = false;
+        };
+        mutable RateControllerState rate_controller_state;
     };
 }
 

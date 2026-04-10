@@ -5,6 +5,8 @@
 
 #include <rl_tools/utils/generic/vector_operations.h>
 #include "quaternion_helper.h"
+#include "rate_controller.h"
+#include "mixer.h"
 
 #include <rl_tools/utils/generic/typing.h>
 
@@ -118,6 +120,22 @@ namespace rl_tools{
 
 
 namespace rl_tools::rl::environments::multirotor {
+    template<typename DEVICE, typename T, typename PARAMETERS>
+    RL_TOOLS_FUNCTION_PLACEMENT void normalized_action_to_ctbr_command(
+            DEVICE& device,
+            const PARAMETERS& params,
+            const T normalized_action[4],
+            T desired_angular_velocity[3],
+            T& desired_thrust_acceleration
+    ){
+        desired_angular_velocity[0] = normalized_action[0] * params.dynamics.control_limits.max_tilt_angular_velocity;
+        desired_angular_velocity[1] = normalized_action[1] * params.dynamics.control_limits.max_tilt_angular_velocity;
+        desired_angular_velocity[2] = normalized_action[2] * params.dynamics.control_limits.max_yaw_angular_velocity;
+        const T min_thrust_acceleration = params.dynamics.control_limits.thrust_acceleration_min;
+        const T max_thrust_acceleration = params.dynamics.control_limits.thrust_acceleration_max;
+        desired_thrust_acceleration = ((normalized_action[3] + (T)1) / (T)2) * (max_thrust_acceleration - min_thrust_acceleration) + min_thrust_acceleration;
+    }
+
     template<typename DEVICE, typename T, typename TI, typename PARAMETERS>
     RL_TOOLS_FUNCTION_PLACEMENT void multirotor_dynamics(DEVICE& device, const PARAMETERS& params, const StateBase<T, TI>& state, const T* action, StateBase<T, TI>& state_change) {
         using STATE = StateBase<T, TI>;
@@ -243,6 +261,7 @@ namespace rl_tools{
         for(typename DEVICE::index_t i = 0; i < 3; i++){
             state.angular_velocity[i] = 0;
         }
+        rl::environments::multirotor::reset_body_rate_controller(device, env);
         initial_parameters(device, env, state);
     }
     template<typename DEVICE, typename T, typename TI, typename SPEC, typename NEXT_COMPONENT>
@@ -258,19 +277,23 @@ namespace rl_tools{
     template<typename DEVICE, typename T, typename TI, typename SPEC, typename NEXT_COMPONENT>
     static void initial_state(DEVICE& device, rl::environments::Multirotor<SPEC>& env, typename rl::environments::multirotor::StateRotors<T, TI, NEXT_COMPONENT>& state){
         initial_state(device, env, static_cast<NEXT_COMPONENT&>(state));
+        T torque_zero[3] = {0, 0, 0};
+        const T hover_thrust_acceleration = (env.parameters.dynamics.control_limits.thrust_acceleration_min + env.parameters.dynamics.control_limits.thrust_acceleration_max) / 2;
+        T rpm_hover[4];
+        rl::environments::multirotor::mix_ctbr_to_rpm(device, env.parameters, hover_thrust_acceleration, torque_zero, rpm_hover);
         for(typename DEVICE::index_t i = 0; i < 4; i++){
-            state.rpm[i] = (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) / 2 + env.parameters.dynamics.action_limit.min;
+            state.rpm[i] = rpm_hover[i];
         }
     }
     template<typename DEVICE, typename T, typename TI_H, TI_H HISTORY_LENGTH, typename SPEC, typename NEXT_COMPONENT>
     static void initial_state(DEVICE& device, rl::environments::Multirotor<SPEC>& env, typename rl::environments::multirotor::StateRotorsHistory<T, TI_H, HISTORY_LENGTH, NEXT_COMPONENT>& state){
         using TI = typename DEVICE::index_t;
-        using MULTIROTOR = rl::environments::Multirotor<SPEC>;
         initial_state(device, env, static_cast<rl::environments::multirotor::StateRotors<T, TI, NEXT_COMPONENT>&>(state));
         for(TI step_i = 0; step_i < HISTORY_LENGTH; step_i++){
-            for(TI action_i = 0; action_i < MULTIROTOR::ACTION_DIM; action_i++){
-                state.action_history[step_i][action_i] = (state.rpm[action_i] - env.parameters.dynamics.action_limit.min) / (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) * 2 - 1;
-            }
+            state.action_history[step_i][0] = 0;
+            state.action_history[step_i][1] = 0;
+            state.action_history[step_i][2] = 0;
+            state.action_history[step_i][3] = 0;
         }
     }
     template<typename DEVICE, typename T, typename TI, typename SPEC, typename RNG, bool INHERIT_GUIDANCE = false>
@@ -315,6 +338,7 @@ namespace rl_tools{
         for(TI i = 0; i < 3; i++){
             state.angular_velocity[i] = random::uniform_real_distribution(random_dev, -env.parameters.mdp.init.max_angular_velocity, env.parameters.mdp.init.max_angular_velocity, rng);
         }
+        rl::environments::multirotor::reset_body_rate_controller(device, env);
         initial_parameters(device, env, state);
     }
     template<typename DEVICE, typename T_S, typename TI_S, typename SPEC, typename NEXT_COMPONENT, typename RNG>
@@ -350,34 +374,56 @@ namespace rl_tools{
     template<typename DEVICE, typename T, typename TI, typename SPEC, typename NEXT_COMPONENT, typename RNG>
     RL_TOOLS_FUNCTION_PLACEMENT static void sample_initial_state(DEVICE& device, rl::environments::Multirotor<SPEC>& env, typename rl::environments::multirotor::StateRotors<T, TI, NEXT_COMPONENT>& state, RNG& rng){
         sample_initial_state(device, env, static_cast<NEXT_COMPONENT&>(state), rng);
-        T min_rpm, max_rpm;
-        if(env.parameters.mdp.init.relative_rpm){
-            min_rpm = (env.parameters.mdp.init.min_rpm + 1)/2 * (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) + env.parameters.dynamics.action_limit.min;
-            max_rpm = (env.parameters.mdp.init.max_rpm + 1)/2 * (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) + env.parameters.dynamics.action_limit.min;
+        T min_thrust_acceleration, max_thrust_acceleration;
+        if(env.parameters.mdp.init.relative_thrust_acceleration){
+            const T min_action = env.parameters.mdp.init.min_thrust_acceleration;
+            const T max_action = env.parameters.mdp.init.max_thrust_acceleration;
+            min_thrust_acceleration = ((min_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
+            max_thrust_acceleration = ((max_action + 1) / 2) * (env.parameters.dynamics.control_limits.thrust_acceleration_max - env.parameters.dynamics.control_limits.thrust_acceleration_min) + env.parameters.dynamics.control_limits.thrust_acceleration_min;
         }
         else{
-            min_rpm = env.parameters.mdp.init.min_rpm < 0 ? env.parameters.dynamics.action_limit.min : env.parameters.mdp.init.min_rpm;
-            max_rpm = env.parameters.mdp.init.max_rpm < 0 ? env.parameters.dynamics.action_limit.max : env.parameters.mdp.init.max_rpm;
-            if(max_rpm > env.parameters.dynamics.action_limit.max){
-                max_rpm = env.parameters.dynamics.action_limit.max;
-            }
-            if(min_rpm > max_rpm){
-                min_rpm = max_rpm;
+            min_thrust_acceleration = env.parameters.mdp.init.min_thrust_acceleration;
+            max_thrust_acceleration = env.parameters.mdp.init.max_thrust_acceleration;
+            min_thrust_acceleration = math::clamp(device.math, min_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
+            max_thrust_acceleration = math::clamp(device.math, max_thrust_acceleration, env.parameters.dynamics.control_limits.thrust_acceleration_min, env.parameters.dynamics.control_limits.thrust_acceleration_max);
+            if(min_thrust_acceleration > max_thrust_acceleration){
+                min_thrust_acceleration = max_thrust_acceleration;
             }
         }
+        const T thrust_acceleration = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_acceleration, max_thrust_acceleration, rng);
+        T torque_zero[3] = {0, 0, 0};
+        T rpm_target[4];
+        rl::environments::multirotor::mix_ctbr_to_rpm(device, env.parameters, thrust_acceleration, torque_zero, rpm_target);
         for(TI i = 0; i < 4; i++){
-            state.rpm[i] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_rpm, max_rpm, rng);
+            state.rpm[i] = rpm_target[i];
         }
     }
     template<typename DEVICE, typename T_S, typename TI_S, TI_S HISTORY_LENGTH, typename NEXT_COMPONENT, typename SPEC, typename RNG>
     RL_TOOLS_FUNCTION_PLACEMENT static void sample_initial_state(DEVICE& device, rl::environments::Multirotor<SPEC>& env, typename rl::environments::multirotor::StateRotorsHistory<T_S, TI_S, HISTORY_LENGTH, NEXT_COMPONENT>& state, RNG& rng){
         using MULTIROTOR = rl::environments::Multirotor<SPEC>;
+        using T = T_S;
         using TI = typename DEVICE::index_t;
         sample_initial_state(device, env, static_cast<typename rl::environments::multirotor::StateRotors<T_S, TI_S, NEXT_COMPONENT>&>(state), rng);
+        const T max_tilt_command = math::clamp(device.math, env.parameters.mdp.init.max_tilt_angular_velocity_command / env.parameters.dynamics.control_limits.max_tilt_angular_velocity, (T)0, (T)1);
+        const T max_yaw_command = math::clamp(device.math, env.parameters.mdp.init.max_yaw_angular_velocity_command / env.parameters.dynamics.control_limits.max_yaw_angular_velocity, (T)0, (T)1);
+        T min_thrust_command_normalized = env.parameters.mdp.init.min_thrust_acceleration;
+        T max_thrust_command_normalized = env.parameters.mdp.init.max_thrust_acceleration;
+        if(!env.parameters.mdp.init.relative_thrust_acceleration){
+            const T min_thrust_acceleration = env.parameters.dynamics.control_limits.thrust_acceleration_min;
+            const T max_thrust_acceleration = env.parameters.dynamics.control_limits.thrust_acceleration_max;
+            min_thrust_command_normalized = 2 * (env.parameters.mdp.init.min_thrust_acceleration - min_thrust_acceleration) / (max_thrust_acceleration - min_thrust_acceleration) - 1;
+            max_thrust_command_normalized = 2 * (env.parameters.mdp.init.max_thrust_acceleration - min_thrust_acceleration) / (max_thrust_acceleration - min_thrust_acceleration) - 1;
+        }
+        min_thrust_command_normalized = math::clamp(device.math, min_thrust_command_normalized, (T)-1, (T)1);
+        max_thrust_command_normalized = math::clamp(device.math, max_thrust_command_normalized, (T)-1, (T)1);
+        if(min_thrust_command_normalized > max_thrust_command_normalized){
+            min_thrust_command_normalized = max_thrust_command_normalized;
+        }
         for(TI step_i = 0; step_i < HISTORY_LENGTH; step_i++){
-            for(TI action_i = 0; action_i < MULTIROTOR::ACTION_DIM; action_i++){
-                state.action_history[step_i][action_i] = (state.rpm[action_i] - env.parameters.dynamics.action_limit.min) / (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) * 2 - 1;
-            }
+            state.action_history[step_i][0] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
+            state.action_history[step_i][1] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_tilt_command, max_tilt_command, rng);
+            state.action_history[step_i][2] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), -max_yaw_command, max_yaw_command, rng);
+            state.action_history[step_i][3] = random::uniform_real_distribution(typename DEVICE::SPEC::RANDOM(), min_thrust_command_normalized, max_thrust_command_normalized, rng);
         }
     }
     namespace rl::environments::multirotor{
@@ -511,12 +557,13 @@ namespace rl_tools{
             using OBSERVATION = rl::environments::multirotor::observation::ActionHistory<OBSERVATION_SPEC>;
             static_assert(OBS_SPEC::COLS >= OBSERVATION::CURRENT_DIM);
             static_assert(OBS_SPEC::ROWS == 1);
-            static_assert(rl::environments::Multirotor<SPEC>::State::HISTORY_LENGTH == OBSERVATION::HISTORY_LENGTH);
+            static_assert(rl::environments::Multirotor<SPEC>::State::HISTORY_LENGTH >= OBSERVATION::HISTORY_LENGTH);
             static_assert(rl::environments::Multirotor<SPEC>::State::ACTION_DIM == OBSERVATION::ACTION_DIM);
             static_assert(rl::environments::Multirotor<SPEC>::ACTION_DIM == OBSERVATION::ACTION_DIM);
             for(TI step_i = 0; step_i < OBSERVATION::HISTORY_LENGTH; step_i++){
+                const TI source_step_i = rl::environments::Multirotor<SPEC>::State::HISTORY_LENGTH - OBSERVATION::HISTORY_LENGTH + step_i;
                 for(TI action_i = 0; action_i < OBSERVATION::ACTION_DIM; action_i++){
-                    set(observation, 0, step_i*OBSERVATION::ACTION_DIM + action_i, state.action_history[step_i][action_i]);
+                    set(observation, 0, step_i*OBSERVATION::ACTION_DIM + action_i, state.action_history[source_step_i][action_i]);
                 }
             }
             auto next_observation = view(device, observation, matrix::ViewSpec<1, OBS_SPEC::COLS - OBSERVATION::CURRENT_DIM>{}, 0, OBSERVATION::CURRENT_DIM);
@@ -661,7 +708,7 @@ namespace rl_tools{
 //    }
     // todo: make state const again
     template<typename DEVICE, typename SPEC, typename ACTION_SPEC, typename RNG>
-    RL_TOOLS_FUNCTION_PLACEMENT static typename SPEC::T step(DEVICE& device, const rl::environments::Multirotor<SPEC>& env, const typename rl::environments::Multirotor<SPEC>::State& state, const Matrix<ACTION_SPEC>& action, typename rl::environments::Multirotor<SPEC>::State& next_state, RNG& rng) {
+    RL_TOOLS_FUNCTION_PLACEMENT static typename SPEC::T step(DEVICE& device, rl::environments::Multirotor<SPEC>& env, const typename rl::environments::Multirotor<SPEC>::State& state, const Matrix<ACTION_SPEC>& action, typename rl::environments::Multirotor<SPEC>::State& next_state, RNG& rng) {
         using STATE = typename rl::environments::Multirotor<SPEC>::State;
         using T = typename SPEC::T;
         using TI = typename DEVICE::index_t;
@@ -670,15 +717,19 @@ namespace rl_tools{
         static_assert(ACTION_SPEC::ROWS == 1);
         static_assert(ACTION_SPEC::COLS == ACTION_DIM);
         T action_scaled[ACTION_DIM];
+        T action_noisy_normalized[ACTION_DIM];
 
         for(TI action_i = 0; action_i < ACTION_DIM; action_i++){
-            T half_range = (env.parameters.dynamics.action_limit.max - env.parameters.dynamics.action_limit.min) / 2;
             T action_noisy = get(action, 0, action_i);
             action_noisy += random::normal_distribution::sample(typename DEVICE::SPEC::RANDOM(), (T)0, env.parameters.mdp.action_noise.normalized_rpm, rng);
-            action_noisy = math::clamp(device.math, action_noisy, -(T)1, (T)1);
-            action_scaled[action_i] = action_noisy * half_range + env.parameters.dynamics.action_limit.min + half_range;
-//            state.rpm[action_i] = action_scaled[action_i];
+            action_noisy_normalized[action_i] = math::clamp(device.math, action_noisy, -(T)1, (T)1);
         }
+        T desired_angular_velocity[3];
+        T desired_thrust_acceleration;
+        rl::environments::multirotor::normalized_action_to_ctbr_command(device, env.parameters, action_noisy_normalized, desired_angular_velocity, desired_thrust_acceleration);
+        T desired_torque[3];
+        rl::environments::multirotor::body_rate_controller(device, env, static_cast<const rl::environments::multirotor::StateBase<T, TI>&>(state), desired_angular_velocity, desired_torque);
+        rl::environments::multirotor::mix_ctbr_to_rpm(device, env.parameters, desired_thrust_acceleration, desired_torque, action_scaled);
         utils::integrators::rk4  <DEVICE, typename SPEC::T, typename SPEC::PARAMETERS, STATE, ACTION_DIM, rl::environments::multirotor::multirotor_dynamics_dispatch<DEVICE, typename SPEC::T, typename SPEC::PARAMETERS, STATE>>(device, env.parameters, state, action_scaled, env.parameters.integration.dt, next_state);
 //        utils::integrators::euler<DEVICE, typename SPEC::T, typename SPEC::PARAMETERS, STATE, ACTION_DIM, rl::environments::multirotor::multirotor_dynamics_dispatch<DEVICE, typename SPEC::T, typename SPEC::PARAMETERS, STATE>>(device, env.parameters, state, action_scaled, env.parameters.integration.dt, next_state);
 

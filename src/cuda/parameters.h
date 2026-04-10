@@ -1,7 +1,7 @@
 #include <learning_to_fly/simulator/parameters/reward_functions/abs_exp.h>
 #include <learning_to_fly/simulator/parameters/reward_functions/squared.h>
 #include <learning_to_fly/simulator/parameters/reward_functions/default.h>
-#include <learning_to_fly/simulator/parameters/dynamics/crazy_flie.h>
+#include <learning_to_fly/simulator/parameters/dynamics/crazy_flie_sim.h>
 #include <learning_to_fly/simulator/parameters/init/default.h>
 #include <learning_to_fly/simulator/parameters/termination/default.h>
 
@@ -15,7 +15,7 @@ namespace parameters_crazyflie{
 
         using PARAMETERS_TYPE = rlt::rl::environments::multirotor::ParametersDisturbances<T, TI, rlt::rl::environments::multirotor::ParametersBase<T, TI, 4, REWARD_FUNCTION>>;
         static constexpr PARAMETERS_TYPE parameters = {
-                rlt::rl::environments::multirotor::parameters::dynamics::crazy_flie<T, TI, REWARD_FUNCTION>,
+                rlt::rl::environments::multirotor::parameters::dynamics::crazy_flie_sim<T, TI, REWARD_FUNCTION>,
                 {0.01}, // integration dt
                 {
                         rlt::rl::environments::multirotor::parameters::init::all_around<T, TI, 4, REWARD_FUNCTION>,
