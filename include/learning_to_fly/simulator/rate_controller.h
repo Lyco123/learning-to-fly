@@ -73,7 +73,7 @@ namespace rl_tools::rl::environments::multirotor {
             const T feedforward = params.dynamics.rate_controller.kff[i] * desired_angular_velocity[i];
 
             const T torque = proportional + integral + derivative + feedforward + gyroscopic_compensation_gain * gyro_coupling[i];
-            desired_torque[i] = math::clamp(device.math, torque, -params.dynamics.rate_controller.torque_limit[i], params.dynamics.rate_controller.torque_limit[i]);
+            desired_torque[i] = torque; // No clamping as per requirement
             env.rate_controller_state.prev_angular_velocity[i] = state.angular_velocity[i];
             env.rate_controller_state.prev_derivative[i] = derivative_measurement;
         }

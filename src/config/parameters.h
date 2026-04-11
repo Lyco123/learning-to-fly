@@ -5,7 +5,7 @@
 #include <learning_to_fly/simulator/parameters/reward_functions/squared.h>
 #include <learning_to_fly/simulator/parameters/reward_functions/absolute.h>
 #include <learning_to_fly/simulator/parameters/reward_functions/default.h>
-#include <learning_to_fly/simulator/parameters/dynamics/crazy_flie_sim_ctbr.h>
+#include <learning_to_fly/simulator/parameters/dynamics/crazy_flie_sim.h>
 #include <learning_to_fly/simulator/parameters/init/default.h>
 #include <learning_to_fly/simulator/parameters/termination/default.h>
 

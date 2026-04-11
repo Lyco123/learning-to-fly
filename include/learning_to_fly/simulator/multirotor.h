@@ -31,6 +31,8 @@ namespace rl_tools::rl::environments::multirotor{
             T rotor_thrust_directions[N][3];
             T rotor_torque_directions[N][3];
             T thrust_constants[3];
+            T pwm_to_thrust_a;
+            T pwm_to_thrust_b;
             T torque_constant;
             T mass;
             T gravity[3];
@@ -59,7 +61,6 @@ namespace rl_tools::rl::environments::multirotor{
                 bool relative_rpm; //(specification from -1 to 1)
                 T min_rpm; // -1 for default limit when relative_rpm is true, -1 if relative_rpm is false
                 T max_rpm; //  1 for default limit when relative_rpm is true, -1 if relative_rpm is false
-
                 T max_tilt_angular_velocity_command = 4;
                 T max_yaw_angular_velocity_command = 2;
                 bool relative_thrust_acceleration = true;
@@ -85,7 +86,7 @@ namespace rl_tools::rl::environments::multirotor{
 
             /* action noise */
             struct ActionNoise{
-                T normalized_rpm; // std of additive gaussian noise onto the normalized action (-1, 1)
+                T normalized_rpm; // std of additive gaussian noise onto the normalized ctbr action (-1, 1)
             };
 
             Initialization init;

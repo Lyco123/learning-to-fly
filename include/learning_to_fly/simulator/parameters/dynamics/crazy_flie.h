@@ -51,6 +51,9 @@ namespace rl_tools::rl::environments::multirotor::parameters::dynamics{
                     0,
                     3.16e-10
             },
+            // pwm to thrust coefficients (thrust = a * pwm^2 + b * pwm)
+            0.091492681f,
+            0.067673604f,
             // torque constant
 //            0.025126582278481014,
             0.005964552,

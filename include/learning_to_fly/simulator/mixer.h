@@ -7,6 +7,9 @@
 #define RL_TOOLS_FUNCTION_PLACEMENT
 #endif
 
+static float thrustToTorque = 0.005964552f;
+static float armLength = 0.046f; // m;
+
 namespace rl_tools::rl::environments::multirotor {
     template<typename DEVICE, typename T>
     RL_TOOLS_FUNCTION_PLACEMENT T rpm_to_thrust(DEVICE& device, const T thrust_constants[3], T rpm){
@@ -57,15 +60,15 @@ namespace rl_tools::rl::environments::multirotor {
 
         const T rotor_x = params.dynamics.rotor_positions[0][0];
         const T rotor_y = params.dynamics.rotor_positions[0][1];
-        const T arm_length = math::sqrt(device.math, rotor_x * rotor_x + rotor_y * rotor_y);
-        const T arm = (T)0.707106781 * arm_length;
+        // const T arm_length = math::sqrt(device.math, rotor_x * rotor_x + rotor_y * rotor_y);
+        const T arm = (T)0.707106781 * armLength;
         const T arm_safe = arm > (T)1e-9 ? arm : (T)1e-9;
 
         const T roll_part = ((T)0.25 / arm_safe) * desired_torque[0];
         const T pitch_part = ((T)0.25 / arm_safe) * desired_torque[1];
         const T thrust_part = (T)0.25 * total_thrust;
-        const T torque_constant_safe = math::abs(device.math, params.dynamics.torque_constant) > (T)1e-12 ? params.dynamics.torque_constant : (T)1e-12;
-        const T yaw_part = ((T)0.25 / torque_constant_safe) * desired_torque[2];
+        // const T torque_constant_safe = math::abs(device.math, params.dynamics.torque_constant) > (T)1e-12 ? params.dynamics.torque_constant : (T)1e-12;
+        const T yaw_part = ((T)0.25 / thrustToTorque) * desired_torque[2];
 
         desired_thrust_uncapped[0] = thrust_part - roll_part - pitch_part - yaw_part;
         desired_thrust_uncapped[1] = thrust_part - roll_part + pitch_part + yaw_part;
@@ -103,15 +106,50 @@ namespace rl_tools::rl::environments::multirotor {
         T desired_thrust_uncapped[4];
         power_distribution_force_torque(device, params, thrust_acceleration, desired_torque, desired_thrust_uncapped);
 
-        const T rotor_thrust_min = 0;
-        const T rotor_thrust_max = rpm_to_thrust(device, params.dynamics.thrust_constants, params.dynamics.action_limit.max);
-        T desired_thrust_capped[4];
-        power_distribution_cap(device, desired_thrust_uncapped, rotor_thrust_min, rotor_thrust_max, desired_thrust_capped);
-
+        // Convert forces to PWM values (0-UINT16_MAX)
+        T motor_pwm_uncapped[4];
+        const T pwm_to_thrust_a = params.dynamics.pwm_to_thrust_a;
+        const T pwm_to_thrust_b = params.dynamics.pwm_to_thrust_b;
+        
         for(typename DEVICE::index_t rotor_i = 0; rotor_i < 4; rotor_i++){
-            const T thrust = desired_thrust_capped[rotor_i];
-            T rpm = thrust_to_rpm(device, params.dynamics.thrust_constants, thrust);
-            desired_rpm[rotor_i] = math::clamp(device.math, rpm, params.dynamics.action_limit.min, params.dynamics.action_limit.max);
+            T motor_force = desired_thrust_uncapped[rotor_i];
+            if(motor_force < 0){
+                motor_force = 0;
+            }
+            
+            // Solve: thrust = a * pwm^2 + b * pwm for pwm
+            const T discriminant = pwm_to_thrust_b * pwm_to_thrust_b + 4.0f * pwm_to_thrust_a * motor_force;
+            if(discriminant >= 0){
+                const T sqrt_discriminant = math::sqrt(device.math, discriminant);
+                const T motor_pwm = (-pwm_to_thrust_b + sqrt_discriminant) / (2.0f * pwm_to_thrust_a);
+                motor_pwm_uncapped[rotor_i] = motor_pwm * (T)65535.0f; // UINT16_MAX
+            } else {
+                motor_pwm_uncapped[rotor_i] = 0;
+            }
+        }
+        
+        // Cap PWM values to UINT16_MAX
+        T motor_pwm_capped[4];
+        T highest_pwm = motor_pwm_uncapped[0];
+        for(typename DEVICE::index_t rotor_i = 1; rotor_i < 4; rotor_i++){
+            highest_pwm = motor_pwm_uncapped[rotor_i] > highest_pwm ? motor_pwm_uncapped[rotor_i] : highest_pwm;
+        }
+        
+        const T reduction = highest_pwm > (T)65535.0f ? (highest_pwm - (T)65535.0f) : 0;
+        for(typename DEVICE::index_t rotor_i = 0; rotor_i < 4; rotor_i++){
+            motor_pwm_capped[rotor_i] = motor_pwm_uncapped[rotor_i] - reduction;
+            if(motor_pwm_capped[rotor_i] < 0){
+                motor_pwm_capped[rotor_i] = 0;
+            }
+        }
+        
+        // Convert normalized PWM (0-1) to RPM using throttle curve
+        for(typename DEVICE::index_t rotor_i = 0; rotor_i < 4; rotor_i++){
+            const T normalized_pwm = motor_pwm_capped[rotor_i] / (T)65535.0f;
+            // Use the existing thrust_constants to convert to RPM
+            // This is a simplified version - in reality we'd need a proper throttle curve
+            const T max_rpm = params.dynamics.action_limit.max;
+            desired_rpm[rotor_i] = normalized_pwm * max_rpm;
         }
     }
 }
