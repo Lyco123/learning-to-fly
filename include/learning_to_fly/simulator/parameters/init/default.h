@@ -82,7 +82,7 @@ namespace rl_tools::rl::environments::multirotor::parameters::init{
             0,  // min rpm
             0,  // max rpm
             4.0, // max tilt angular velocity command
-            0.1, // max yaw angular velocity command
+            0.5, // max yaw angular velocity command
             true, // relative thrust acceleration
             -1.0, // min thrust acceleration command
             1.0, // max thrust acceleration command
